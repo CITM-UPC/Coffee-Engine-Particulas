@@ -30,8 +30,8 @@ namespace Coffee {
          * @param height The height of the window.
          */
         WindowProps(const std::string& title = "Coffee Engine",
-                    uint32_t width = 1600,
-                    uint32_t height = 900)
+                    uint32_t width = 800,
+                    uint32_t height = 450)
             : Title(title), Width(width), Height(height)
         {
         }

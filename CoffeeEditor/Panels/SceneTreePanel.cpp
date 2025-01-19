@@ -650,7 +650,9 @@ namespace Coffee {
             static char buffer[256] = "";
             ImGui::InputTextWithHint("##Search Component", "Search Component:",buffer, 256);
 
-            std::string items[] = { "Tag Component", "Transform Component", "Mesh Component", "Material Component", "Light Component", "Camera Component", "Lua Script Component" };
+            std::string items[] = {"Tag Component",        "Transform Component",      "Mesh Component",
+                                   "Material Component",   "Light Component",          "Camera Component",
+                                   "Lua Script Component", "Particle System Component"};
             static int item_current = 1;
 
             if (ImGui::BeginListBox("##listbox 2", ImVec2(-FLT_MIN, ImGui::GetContentRegionAvail().y - 200)))
@@ -721,6 +723,15 @@ namespace Coffee {
                         // TODO add script component
                     ImGui::CloseCurrentPopup();
                 }
+                else if (items[item_current] == "Particle System Component")
+                {
+                    if (!entity.HasComponent<ParticleSystemComponent>())
+                    {
+                        entity.AddComponent<ParticleSystemComponent>();
+                        COFFEE_CORE_INFO("ParticleSystemComponent added to entity: {}", (uint32_t)entity);
+                    }
+                    ImGui::CloseCurrentPopup();
+                }
                 else
                 {
                     ImGui::CloseCurrentPopup();
@@ -729,6 +740,56 @@ namespace Coffee {
 
             ImGui::EndPopup();
         }
+
+        if (entity.HasComponent<ParticleSystemComponent>())
+        {
+            auto& particleSystem = entity.GetComponent<ParticleSystemComponent>();
+            bool isCollapsingHeaderOpen = true;
+            if (ImGui::CollapsingHeader("Particle System", &isCollapsingHeaderOpen, ImGuiTreeNodeFlags_DefaultOpen))
+            {
+
+                ImGui::Text("Emitter Properties");
+                ImGui::DragFloat3("Emitter Position", glm::value_ptr(particleSystem.EmitterPosition), 0.1f);
+                ImGui::DragFloat("Emission Rate", &particleSystem.EmissionRate, 0.1f);
+                ImGui::DragFloat("Particle Lifetime", &particleSystem.ParticleLifetime, 0.1f);
+
+                ImGui::Separator();
+                ImGui::Text("Modifiers");
+                ImGui::DragFloat3("Gravity", glm::value_ptr(particleSystem.Gravity), 0.1f);
+                ImGui::Checkbox("Apply Rotation", &particleSystem.ApplyRotation);
+                ImGui::DragFloat("Rotation Speed", &particleSystem.RotationSpeed, 0.1f);
+                ImGui::DragFloat("Particle Size", &particleSystem.ParticleSize, 0.1f, 0.1f); // Ajustar el tamaño
+
+                ImGui::Separator();
+                ImGui::Text("Live Particle Count: %zu", particleSystem.AliveParticleCount); // Mostrar el contador
+
+                ImGui::Separator();
+                ImGui::Text("Visual Properties");
+                if (particleSystem.GetParticleMaterial())
+                {
+                    ImGui::Text("Material: %s", particleSystem.GetParticleMaterial()->GetName().c_str());
+                }
+                else
+                {
+                    ImGui::Text("Material: None");
+                }
+                if (particleSystem.GetParticleMesh())
+                {
+                    ImGui::Text("Mesh: %s", particleSystem.GetParticleMesh()->GetName().c_str());
+                }
+                else
+                {
+                    ImGui::Text("Mesh: None");
+                }
+
+                if (!isCollapsingHeaderOpen)
+                {
+                    entity.RemoveComponent<ParticleSystemComponent>();
+                }
+            }
+        }
+
+
     }
 
 

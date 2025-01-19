@@ -154,6 +154,31 @@ namespace Coffee {
             Renderer::Submit(lightComponent);
         }
 
+        // Procesar sistemas de partículas
+        auto particleView = m_Registry.view<ParticleSystemComponent>();
+        for (auto entity : particleView)
+        {
+            auto& particleSystem = particleView.get<ParticleSystemComponent>(entity);
+            particleSystem.Update(dt); // Llama al método Update del componente
+        }
+
+        // Renderizar partículas en el editor
+        for (auto entity : particleView)
+        {
+            auto& particleSystem = particleView.get<ParticleSystemComponent>(entity);
+
+            // Dibujar gizmos para cada partícula
+            for (const auto& particle : particleSystem.Particles)
+            {
+                if (particle.Age < particle.LifeTime)
+                { // Solo para partículas vivas
+                    DebugRenderer::DrawSphere(particle.Position, particle.Size, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+                }
+            }
+
+            particleSystem.Render(); // Renderiza las partículas visuales
+        }
+
         Renderer::EndScene();
     }
 
@@ -162,6 +187,14 @@ namespace Coffee {
         ZoneScoped;
 
         m_SceneTree->Update();
+
+        // Procesar sistemas de partículas
+        auto particleView = m_Registry.view<ParticleSystemComponent>();
+        for (auto entity : particleView)
+        {
+            auto& particleSystem = particleView.get<ParticleSystemComponent>(entity);
+            particleSystem.Update(dt); // Llama al método Update del componente
+        }
 
         Camera* camera = nullptr;
         glm::mat4 cameraTransform;
@@ -247,6 +280,13 @@ namespace Coffee {
             auto& scriptComponent = scriptView.get<ScriptComponent>(entity);
 
             scriptComponent.script.OnUpdate();
+        }
+
+        // Renderizar partículas en el editor
+        for (auto entity : particleView)
+        {
+            auto& particleSystem = particleView.get<ParticleSystemComponent>(entity);
+            particleSystem.Render(); // Renderiza las partículas visuales
         }
 
         Renderer::EndScene();
