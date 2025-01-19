@@ -38,8 +38,7 @@ find_package(nfd REQUIRED)
 find_package(sol2 CONFIG REQUIRED)
 find_package(Lua REQUIRED)
 
-add_library(${PROJECT_NAME} ${SOURCES} "src/CoffeeEngine/Core/Billboard.h" "src/CoffeeEngine/Core/Billboard.cpp" "src/CoffeeEngine/Renderer/BillboardRenderer.h" "src/CoffeeEngine/Renderer/BillboardRenderer.cpp")
-add_library(${PROJECT_NAME} ${SOURCES} "src/CoffeeEngine/Scene/ParticleSystemComponent.h" "src/CoffeeEngine/Scene/ParticleSystemComponent.cpp")
+add_library(${PROJECT_NAME} ${SOURCES} "src/CoffeeEngine/Core/Billboard.h" "src/CoffeeEngine/Core/Billboard.cpp" "src/CoffeeEngine/Renderer/BillboardRenderer.h" "src/CoffeeEngine/Renderer/BillboardRenderer.cpp" "src/CoffeeEngine/Scene/ParticleSystemComponent.h" "src/CoffeeEngine/Scene/ParticleSystemComponent.cpp")
 add_library(coffee-engine ALIAS ${PROJECT_NAME})
 
 target_include_directories(${PROJECT_NAME}
