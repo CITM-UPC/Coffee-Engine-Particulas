@@ -108,6 +108,12 @@ namespace Coffee {
 
         const float& GetOrbitZoom() const { return m_Distance; }
 
+        /**
+         * @brief Gets the view projection matrix of the camera.
+         * @return The view projection matrix.
+         */
+        glm::mat4 GetViewProjection() const { return GetProjection() * GetViewMatrix(); }
+
     private:
         /**
          * @brief Updates the view matrix based on the current position and orientation.

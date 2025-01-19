@@ -111,6 +111,8 @@ namespace Coffee {
         s_RendererData.CameraUniformBuffer->SetData(&s_RendererData.cameraData, sizeof(RendererData::CameraData));
 
         s_RendererData.renderData.lightCount = 0;
+
+        BillboardRenderer::BeginScene(camera.GetViewProjection(), camera.GetPosition(), camera.GetUpDirection());
     }
 
     void Renderer::BeginScene(Camera& camera, const glm::mat4& transform)
@@ -229,6 +231,8 @@ namespace Coffee {
         s_MainFramebuffer->UnBind();
 
         s_RendererData.renderQueue.clear();
+
+        BillboardRenderer::EndScene();
     }
 
     //TEMPORAL
@@ -279,6 +283,16 @@ namespace Coffee {
         RendererAPI::DrawIndexed(vertexArray);
 
         s_Stats.DrawCalls++;
+    }
+
+    void Renderer::Submit(const BillboardRenderCommand& command)
+    {
+        BillboardRenderer::Submit(command);
+    }
+
+    void Renderer::Submit(const Ref<Billboard>& billboard, const Ref<Material>& material, uint32_t entityID)
+    {
+        BillboardRenderer::Submit(billboard, material, entityID);
     }
 
     void Renderer::OnResize(uint32_t width, uint32_t height)

@@ -10,6 +10,7 @@
 #include "CoffeeEngine/Renderer/UniformBuffer.h"
 #include "CoffeeEngine/Renderer/VertexArray.h"
 #include "CoffeeEngine/Scene/Components.h"
+#include "CoffeeEngine/Renderer/BillBoardRenderer.h"
 #include <glm/fwd.hpp>
 
 namespace Coffee {
@@ -146,6 +147,20 @@ namespace Coffee {
 
          //Todo change this to a light class and not a component
         static void Submit(const LightComponent& light);
+
+        /**
+         * @brief Submits a billboard render command.
+         * @param command The billboard render command.
+         */
+        static void Submit(const BillboardRenderCommand& command);
+
+        /**
+         * @brief Submits a billboard with the specified material and entity ID.
+         * @param billboard The billboard.
+         * @param material The material.
+         * @param entityID The entity ID.
+         */
+        static void Submit(const Ref<Billboard>& billboard, const Ref<Material>& material, uint32_t entityID = 4294967295);
 
         /**
          * @brief Resizes the renderer to the specified width and height.
