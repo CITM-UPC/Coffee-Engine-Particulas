@@ -155,11 +155,16 @@ namespace Coffee {
         }
 
         // Procesar sistemas de partículas
-        auto particleView = m_Registry.view<ParticleSystemComponent>();
+        auto particleView = m_Registry.view<ParticleSystemComponent, TransformComponent>();
         for (auto entity : particleView)
         {
             auto& particleSystem = particleView.get<ParticleSystemComponent>(entity);
+            auto& transformComponent = particleView.get<TransformComponent>(entity);
+
+            particleSystem.GlobalEmitterPosition = glm::vec3(transformComponent.GetWorldTransform() * glm::vec4(particleSystem.LocalEmitterPosition, 1.0f));
+
             particleSystem.Update(dt); // Llama al método Update del componente
+            particleSystem.Render();  
         }
 
         // Renderizar partículas en el editor

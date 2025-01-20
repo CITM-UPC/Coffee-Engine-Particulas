@@ -30,7 +30,8 @@ namespace Coffee
         void Render();
 
         // Configuración del emisor
-        glm::vec3 EmitterPosition = {0.0f, 0.0f, 0.0f};
+        glm::vec3 LocalEmitterPosition = {0.0f, 0.0f, 0.0f}; 
+        glm::vec3 GlobalEmitterPosition = {0.0f, 0.0f, 0.0f}; 
         float EmissionRate = 10.0f;
         float ParticleLifetime = 5.0f;
         glm::vec3 Gravity = {0.0f, -9.81f, 0.0f};
@@ -47,7 +48,7 @@ namespace Coffee
 
         template <class Archive> void serialize(Archive& archive)
         {
-            archive(cereal::make_nvp("EmitterPosition", EmitterPosition),
+            archive(cereal::make_nvp("EmitterPosition", LocalEmitterPosition),
                     cereal::make_nvp("EmissionRate", EmissionRate),
                     cereal::make_nvp("ParticleLifetime", ParticleLifetime), cereal::make_nvp("Gravity", Gravity),
                     cereal::make_nvp("ParticleSize", ParticleSize));

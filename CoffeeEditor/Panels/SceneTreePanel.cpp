@@ -749,7 +749,7 @@ namespace Coffee {
             {
 
                 ImGui::Text("Emitter Properties");
-                ImGui::DragFloat3("Emitter Position", glm::value_ptr(particleSystem.EmitterPosition), 0.1f);
+                ImGui::DragFloat3("Emitter Position", glm::value_ptr(particleSystem.LocalEmitterPosition), 0.1f);
                 ImGui::DragFloat("Emission Rate", &particleSystem.EmissionRate, 0.1f);
                 ImGui::DragFloat("Particle Lifetime", &particleSystem.ParticleLifetime, 0.1f);
 

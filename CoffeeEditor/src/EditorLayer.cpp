@@ -600,6 +600,27 @@ namespace Coffee {
             }
         }
 
+        auto particleView = m_ActiveScene->GetAllEntitiesWithComponents<ParticleSystemComponent, TransformComponent>();
+
+        for (auto entity : particleView)
+        {
+            auto& particleSystem = particleView.get<ParticleSystemComponent>(entity);
+            auto& transformComponent = particleView.get<TransformComponent>(entity);
+
+            // Update emitter position based on parent object transform
+            particleSystem.GlobalEmitterPosition = glm::vec3(transformComponent.GetWorldTransform() * glm::vec4(particleSystem.LocalEmitterPosition, 1.0f));
+
+            for (const auto& particle : particleSystem.Particles)
+            {
+                if (particle.Age < particle.LifeTime)
+                { 
+                    DebugRenderer::DrawSphere(particle.Position, particle.Size, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+                }
+            }
+
+            particleSystem.Render(); 
+        }
+
         auto cameraView = m_ActiveScene->GetAllEntitiesWithComponents<CameraComponent, TransformComponent>();
 
         for(auto entity : cameraView)

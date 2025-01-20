@@ -44,8 +44,6 @@ namespace Coffee
         Particles.erase(
             std::remove_if(Particles.begin(), Particles.end(), [](const Particle& p) { return p.Age >= p.LifeTime; }),
             Particles.end());
-
-        COFFEE_CORE_INFO("Alive particles: {}", AliveParticleCount);
     }
 
 
@@ -72,7 +70,7 @@ namespace Coffee
     void ParticleSystemComponent::EmitParticle()
     {
         Particle particle;
-        particle.Position = EmitterPosition;
+        particle.Position = GlobalEmitterPosition;
         particle.Velocity = glm::vec3(0.0f); // Velocidad inicial
         particle.Color = glm::vec4(1.0f);    // Color blanco
         particle.LifeTime = ParticleLifetime;
@@ -80,7 +78,6 @@ namespace Coffee
         particle.Size = ParticleSize;
 
         Particles.push_back(particle);
-        COFFEE_CORE_INFO("Emitted particle");
     }
 
 } // namespace Coffee
