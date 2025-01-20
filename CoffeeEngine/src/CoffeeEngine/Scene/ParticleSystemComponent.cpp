@@ -1,6 +1,7 @@
 #include "CoffeeEngine/Scene/ParticleSystemComponent.h"
 #include "CoffeeEngine/Core/Log.h"
 #include "CoffeeEngine/Scene/PrimitiveMesh.h"
+#include "CoffeeEngine/Renderer/BillboardRenderer.h"
 #include <glm/gtx/transform.hpp>
 #include <random>
 
@@ -36,6 +37,13 @@ namespace Coffee
                 particle.Velocity += Gravity * deltaTime;
                 particle.Position += particle.Velocity * deltaTime;
                 particle.Age += deltaTime;
+
+                if (particle.Billboard)
+                {
+                    particle.Billboard->SetPosition(particle.Position);
+                    particle.Billboard->SetScale(glm::vec3(particle.Size));
+                }
+
                 AliveParticleCount++; // Incrementar el contador para partículas vivas
             }
         }
@@ -44,21 +52,30 @@ namespace Coffee
         Particles.erase(
             std::remove_if(Particles.begin(), Particles.end(), [](const Particle& p) { return p.Age >= p.LifeTime; }),
             Particles.end());
+
+        COFFEE_CORE_INFO("Alive particles: {}", AliveParticleCount);
     }
 
 
-    void ParticleSystemComponent::Render()
+    void ParticleSystemComponent::Render(const glm::mat4& viewProjection, const glm::vec3& cameraPosition,
+                                         const glm::vec3& cameraUp)
     {
+        BillboardRenderer::BeginScene(viewProjection, cameraPosition, cameraUp);
+
         std::vector<glm::mat4> InstanceTransforms;
         for (const auto& particle : Particles)
         {
             if (particle.Age < particle.LifeTime)
             {
+                BillboardRenderer::Submit(particle.Billboard, ParticleMaterial, /* entityID */ 0);
+
                 glm::mat4 transform = glm::translate(glm::mat4(1.0f), particle.Position) *
                                       glm::scale(glm::mat4(1.0f), glm::vec3(particle.Size));
                 InstanceTransforms.push_back(transform);
             }
         }
+
+        BillboardRenderer::EndScene();
 
         if (!InstanceTransforms.empty() && ParticleMesh && ParticleMaterial)
         {
@@ -77,7 +94,12 @@ namespace Coffee
         particle.Age = 0.0f;
         particle.Size = ParticleSize;
 
+        particle.Billboard = Billboard::Create(BillboardType::SCREEN_ALIGNED);
+        particle.Billboard->SetPosition(particle.Position);
+        particle.Billboard->SetScale(glm::vec3(particle.Size));
+
         Particles.push_back(particle);
+        COFFEE_CORE_INFO("Emitted particle");
     }
 
 } // namespace Coffee

@@ -134,16 +134,15 @@ namespace Coffee {
 
             Ref<Mesh> mesh = meshComponent.GetMesh();
             Ref<Material> material = (materialComponent) ? materialComponent->material : nullptr;
-            
-            //Renderer::Submit(material, mesh, transformComponent.GetWorldTransform(), (uint32_t)entity);
+
             Renderer::Submit(RenderCommand{transformComponent.GetWorldTransform(), mesh, material, (uint32_t)entity});
         }
 
-        //Get all entities with LightComponent and TransformComponent
+        // Get all entities with LightComponent and TransformComponent
         auto lightView = m_Registry.view<LightComponent, TransformComponent>();
 
-        //Loop through each entity with the specified components
-        for(auto& entity : lightView)
+        // Loop through each entity with the specified components
+        for (auto& entity : lightView)
         {
             auto& lightComponent = lightView.get<LightComponent>(entity);
             auto& transformComponent = lightView.get<TransformComponent>(entity);
@@ -161,27 +160,29 @@ namespace Coffee {
             auto& particleSystem = particleView.get<ParticleSystemComponent>(entity);
             auto& transformComponent = particleView.get<TransformComponent>(entity);
 
-            particleSystem.GlobalEmitterPosition = glm::vec3(transformComponent.GetWorldTransform() * glm::vec4(particleSystem.LocalEmitterPosition, 1.0f));
+            // Actualizar posición del emisor
+            particleSystem.GlobalEmitterPosition = glm::vec3(transformComponent.GetWorldTransform() *
+                                                             glm::vec4(particleSystem.LocalEmitterPosition, 1.0f));
 
-            particleSystem.Update(dt); // Llama al método Update del componente
-            particleSystem.Render();  
-        }
+            // Actualizar el sistema de partículas
+            particleSystem.Update(dt);
 
-        // Renderizar partículas en el editor
-        for (auto entity : particleView)
-        {
-            auto& particleSystem = particleView.get<ParticleSystemComponent>(entity);
+            // Obtener la información de la cámara del editor
+            glm::mat4 viewProjection = camera.GetViewProjection();
+            glm::vec3 cameraPosition = camera.GetPosition();
+            glm::vec3 cameraUp = camera.GetUpDirection();
+
+            // Renderizar las partículas con la información de la cámara
+            particleSystem.Render(viewProjection, cameraPosition, cameraUp);
 
             // Dibujar gizmos para cada partícula
             for (const auto& particle : particleSystem.Particles)
             {
                 if (particle.Age < particle.LifeTime)
-                { // Solo para partículas vivas
+                {
                     DebugRenderer::DrawSphere(particle.Position, particle.Size, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
                 }
             }
-
-            particleSystem.Render(); // Renderiza las partículas visuales
         }
 
         Renderer::EndScene();
@@ -193,13 +194,13 @@ namespace Coffee {
 
         m_SceneTree->Update();
 
-        // Procesar sistemas de partículas
-        auto particleView = m_Registry.view<ParticleSystemComponent>();
-        for (auto entity : particleView)
-        {
-            auto& particleSystem = particleView.get<ParticleSystemComponent>(entity);
-            particleSystem.Update(dt); // Llama al método Update del componente
-        }
+        //// Procesar sistemas de partículas
+        //auto particleView = m_Registry.view<ParticleSystemComponent>();
+        //for (auto entity : particleView)
+        //{
+        //    auto& particleSystem = particleView.get<ParticleSystemComponent>(entity);
+        //    particleSystem.Update(dt); // Llama al método Update del componente
+        //}
 
         Camera* camera = nullptr;
         glm::mat4 cameraTransform;
@@ -288,10 +289,26 @@ namespace Coffee {
         }
 
         // Renderizar partículas en el editor
+        auto particleView = m_Registry.view<ParticleSystemComponent, TransformComponent>();
         for (auto entity : particleView)
         {
             auto& particleSystem = particleView.get<ParticleSystemComponent>(entity);
-            particleSystem.Render(); // Renderiza las partículas visuales
+            auto& transformComponent = particleView.get<TransformComponent>(entity);
+
+            // Actualizar posición del emisor
+            particleSystem.GlobalEmitterPosition = glm::vec3(transformComponent.GetWorldTransform() *
+                                                             glm::vec4(particleSystem.LocalEmitterPosition, 1.0f));
+
+            // Actualizar el sistema de partículas
+            particleSystem.Update(dt);
+
+            // Obtener la información de la cámara del juego
+            glm::mat4 viewProjection = camera->GetProjection() * glm::inverse(cameraTransform);
+            glm::vec3 cameraPosition = glm::vec3(cameraTransform[3]);
+            glm::vec3 cameraUp = glm::normalize(glm::vec3(cameraTransform[1]));
+
+            // Renderizar las partículas con la información de la cámara
+            particleSystem.Render(viewProjection, cameraPosition, cameraUp);
         }
 
         Renderer::EndScene();

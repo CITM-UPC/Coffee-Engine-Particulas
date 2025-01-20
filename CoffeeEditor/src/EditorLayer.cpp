@@ -618,7 +618,13 @@ namespace Coffee {
                 }
             }
 
-            particleSystem.Render(); 
+            // Obtener la información de la cámara del editor
+            glm::mat4 viewProjection = m_EditorCamera.GetViewProjection();
+            glm::vec3 cameraPosition = m_EditorCamera.GetPosition();
+            glm::vec3 cameraUp = m_EditorCamera.GetUpDirection();
+
+            // Actualizar la llamada a Render con los parámetros necesarios
+            particleSystem.Render(viewProjection, cameraPosition, cameraUp); 
         }
 
         auto cameraView = m_ActiveScene->GetAllEntitiesWithComponents<CameraComponent, TransformComponent>();
