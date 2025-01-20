@@ -3,6 +3,7 @@
 #include "CoffeeEngine/Renderer/Material.h"
 #include "CoffeeEngine/Renderer/Mesh.h"
 #include "CoffeeEngine/Scene/Components.h"
+#include "CoffeeEngine/Core/Billboard.h"
 #include <glm/glm.hpp>
 #include <vector>
 
@@ -20,6 +21,7 @@ namespace Coffee
             float LifeTime;
             float Age;
             float Size;
+            Ref<Billboard> Billboard;
         };
 
         const Ref<Material>& GetParticleMaterial() const { return ParticleMaterial; }
@@ -27,7 +29,7 @@ namespace Coffee
 
         ParticleSystemComponent();
         void Update(float deltaTime);
-        void Render();
+        void Render(const glm::mat4& viewProjection, const glm::vec3& cameraPosition, const glm::vec3& cameraUp);
 
         // Configuración del emisor
         glm::vec3 LocalEmitterPosition = {0.0f, 0.0f, 0.0f}; 
