@@ -538,65 +538,58 @@ namespace Coffee {
         }
         ImGui::End();
     }
-
+       
     void EditorLayer::OnOverlayRender()
     {
         Renderer::BeginOverlay(m_EditorCamera);
 
         Entity selectedEntity = m_SceneTreePanel.GetSelectedEntity();
-        static Entity lastSelectedEntity;  
+        static Entity lastSelectedEntity;
 
-        if(selectedEntity)
+        if (selectedEntity)
         {
             auto& transformComponent = selectedEntity.GetComponent<TransformComponent>();
-            if (selectedEntity.HasComponent<MeshComponent>()) {
+            if (selectedEntity.HasComponent<MeshComponent>())
+            {
                 auto& meshComponent = selectedEntity.GetComponent<MeshComponent>();
 
                 glm::mat4 transform = transformComponent.GetWorldTransform();
 
-                if(meshComponent.drawAABB)
+                if (meshComponent.drawAABB)
                 {
                     const AABB& aabb = meshComponent.mesh->GetAABB().CalculateTransformedAABB(transform);
                     DebugRenderer::DrawBox(aabb, {0.27f, 0.52f, 0.53f, 1.0f});
                 }
 
-                // ----------------------------------
-
                 OBB obb = meshComponent.mesh->GetOBB(transform);
                 DebugRenderer::DrawBox(obb, {0.99f, 0.50f, 0.09f, 1.0f});
-
-
             }
             else if (selectedEntity != lastSelectedEntity)
             {
-                // TODO generate defaults bounding boxes for when the entity does not have a mesh component
                 lastSelectedEntity = selectedEntity;
-                COFFEE_CORE_WARN("Not printing bounding box: Selected entity {0} does not have a MeshComponent.", selectedEntity.GetComponent<TagComponent>().Tag);
+                COFFEE_CORE_WARN("Not printing bounding box: Selected entity {0} does not have a MeshComponent.",
+                                 selectedEntity.GetComponent<TagComponent>().Tag);
             }
-
         }
 
         auto view = m_ActiveScene->GetAllEntitiesWithComponents<LightComponent, TransformComponent>();
 
-        for(auto entity : view)
+        for (auto entity : view)
         {
             auto& lightComponent = view.get<LightComponent>(entity);
             auto& transformComponent = view.get<TransformComponent>(entity);
 
-            switch (lightComponent.type) {
-                case LightComponent::Type::DirectionalLight:
-                    //DebugRenderer::DrawArrow(transformComponent.GetWorldTransform()[3], lightComponent.Direction, lightComponent.Intensity);
-                    DebugRenderer::DrawArrow(transformComponent.GetWorldTransform()[3], lightComponent.Direction, 1.5f);
+            switch (lightComponent.type)
+            {
+            case LightComponent::Type::DirectionalLight:
+                DebugRenderer::DrawArrow(transformComponent.GetWorldTransform()[3], lightComponent.Direction, 1.5f);
                 break;
 
-                case LightComponent::Type::PointLight:
-                    glm::vec3 worldPosition = transformComponent.GetWorldTransform()[3];
-                    float radius = lightComponent.Range;
-                    DebugRenderer::DrawSphere(worldPosition, radius);
+            case LightComponent::Type::PointLight:
+                glm::vec3 worldPosition = transformComponent.GetWorldTransform()[3];
+                float radius = lightComponent.Range;
+                DebugRenderer::DrawSphere(worldPosition, radius);
                 break;
-
-                /* case LightComponent::Type::SpotLight:
-                break;    */         
             }
         }
 
@@ -605,36 +598,25 @@ namespace Coffee {
         for (auto entity : particleView)
         {
             auto& particleSystem = particleView.get<ParticleSystemComponent>(entity);
-            auto& transformComponent = particleView.get<TransformComponent>(entity);
-
-            // Update emitter position based on parent object transform
-            particleSystem.GlobalEmitterPosition = glm::vec3(transformComponent.GetWorldTransform() * glm::vec4(particleSystem.LocalEmitterPosition, 1.0f));
 
             for (const auto& particle : particleSystem.Particles)
             {
                 if (particle.Age < particle.LifeTime)
-                { 
+                {
                     DebugRenderer::DrawSphere(particle.Position, particle.Size, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
                 }
             }
-
-            // Obtener la información de la cámara del editor
-            glm::mat4 viewProjection = m_EditorCamera.GetViewProjection();
-            glm::vec3 cameraPosition = m_EditorCamera.GetPosition();
-            glm::vec3 cameraUp = m_EditorCamera.GetUpDirection();
-
-            // Actualizar la llamada a Render con los parámetros necesarios
-            particleSystem.Render(viewProjection, cameraPosition, cameraUp); 
         }
 
         auto cameraView = m_ActiveScene->GetAllEntitiesWithComponents<CameraComponent, TransformComponent>();
 
-        for(auto entity : cameraView)
+        for (auto entity : cameraView)
         {
             auto& cameraComponent = cameraView.get<CameraComponent>(entity);
             auto& transformComponent = cameraView.get<TransformComponent>(entity);
 
-            glm::mat4 viewProjection = cameraComponent.Camera.GetProjection() * glm::inverse(transformComponent.GetWorldTransform());
+            glm::mat4 viewProjection =
+                cameraComponent.Camera.GetProjection() * glm::inverse(transformComponent.GetWorldTransform());
 
             DebugRenderer::DrawFrustum(viewProjection, {0.99f, 0.50f, 0.09f, 1.0f});
         }
@@ -644,7 +626,8 @@ namespace Coffee {
         DebugRenderer::DrawLine({0.0f, 0.0f, -1000.0f}, {0.0f, 0.0f, 1000.0f}, {0.153f, 0.525f, 0.918f, 1.0f}, 2);
 
         static Ref<Mesh> gridPlaneDown = PrimitiveMesh::CreatePlane({1000.0f, 1000.0f});
-        static Ref<Mesh> gridPlaneUp = PrimitiveMesh::CreatePlane({1000.0f, -1000.0f}); // FIXME this is a hack to avoid the grid not beeing rendered due to backface culling
+        static Ref<Mesh> gridPlaneUp = PrimitiveMesh::CreatePlane(
+            {1000.0f, -1000.0f}); // FIXME this is a hack to avoid the grid not beeing rendered due to backface culling
         static Ref<Shader> gridShader = Shader::Create("assets/shaders/SimpleGridShader.glsl");
 
         Renderer::Submit(gridShader, gridPlaneUp->GetVertexArray());

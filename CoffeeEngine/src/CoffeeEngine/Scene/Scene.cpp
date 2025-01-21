@@ -174,19 +174,11 @@ namespace Coffee {
 
             // Renderizar las partículas con la información de la cámara
             particleSystem.Render(viewProjection, cameraPosition, cameraUp);
-
-            // Dibujar gizmos para cada partícula
-            for (const auto& particle : particleSystem.Particles)
-            {
-                if (particle.Age < particle.LifeTime)
-                {
-                    DebugRenderer::DrawSphere(particle.Position, particle.Size, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-                }
-            }
         }
 
         Renderer::EndScene();
     }
+
 
     void Scene::OnUpdateRuntime(float dt)
     {
