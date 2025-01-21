@@ -72,6 +72,13 @@ namespace Coffee
 
         std::vector<Particle> Particles;
 
+        void SetParticleTexture(const Ref<Texture2D>& texture);
+
+        Ref<Texture2D> GetParticleTexture() const
+        {
+            return ParticleMaterial ? ParticleMaterial->GetMaterialTextures().albedo : nullptr;
+        }
+
       private:
         void EmitParticle();
         glm::vec3 GenerateRandomVelocity() const;
@@ -95,6 +102,8 @@ namespace Coffee
         Ref<Material> ParticleMaterial;
         Ref<Mesh> ParticleMesh;
         float EmissionAccumulator = 0.0f;
+        MaterialTextures m_ParticleMaterialTextures;
+        MaterialTextureFlags m_ParticleMaterialFlags;
     };
 
 } // namespace Coffee

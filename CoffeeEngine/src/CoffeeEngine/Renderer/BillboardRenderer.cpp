@@ -30,6 +30,10 @@ namespace Coffee
         Ref<IndexBuffer> indexBuffer = IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t));
         s_Data.QuadVertexArray->SetIndexBuffer(indexBuffer);
 
+        if (!std::filesystem::exists("assets/shaders/Billboard.glsl"))
+        {
+            COFFEE_CORE_ERROR("Shader file not found: assets/shaders/Billboard.glsl");
+        }
         s_Data.BillboardShader = Shader::Create("assets/shaders/Billboard.glsl");
     }
 

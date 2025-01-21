@@ -22,8 +22,9 @@ namespace Coffee
         m_Window = Window::Create(WindowProps("Coffee Engine"));
         SetEventCallback(COFFEE_BIND_EVENT_FN(OnEvent));
 
-        Renderer::Init();
         BillboardRenderer::Init();
+        Renderer::Init();
+        /*BillboardRenderer::Init();*/
 
         m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);

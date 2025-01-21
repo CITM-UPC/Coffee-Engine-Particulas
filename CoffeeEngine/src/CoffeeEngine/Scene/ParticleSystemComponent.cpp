@@ -11,12 +11,20 @@ namespace Coffee
     ParticleSystemComponent::ParticleSystemComponent()
     {
         ParticleMaterial = Material::Create("Default Particle Material");
+        //ParticleMaterial->Set("u_Color", glm::vec4(1.0f));
         ParticleMesh = ResourceRegistry::Get<Mesh>("DefaultQuadMesh");
         if (!ParticleMesh)
         {
             COFFEE_CORE_WARN("DefaultQuadMesh not found. Falling back to a generated quad.");
             ParticleMesh = PrimitiveMesh::CreateQuad();
         }
+
+        //// Establecer una textura por defecto (opcional)
+        //ParticleTexture = ResourceRegistry::Get<Texture2D>("DefaultParticleTexture");
+        //if (ParticleTexture)
+        //{
+        //    ParticleMaterial->Set("u_Texture", ParticleTexture);
+        //}
     }
     glm::vec3 ParticleSystemComponent::GenerateRandomVelocity() const
     {
@@ -209,8 +217,48 @@ namespace Coffee
         particle.Billboard->SetPosition(particle.Position);
         particle.Billboard->SetScale(glm::vec3(particle.Size));
 
+        // Asignar el material al billboard
+        if (ParticleMaterial)
+        {
+            particle.Billboard->SetMaterial(ParticleMaterial);
+            COFFEE_CORE_INFO("Material assigned to billboard");
+        }
+        else
+        {
+            COFFEE_CORE_WARN("No material available for billboard");
+        }
+
         Particles.push_back(particle);
         COFFEE_CORE_INFO("Emitted particle");
+    }
+
+    void ParticleSystemComponent::SetParticleTexture(const Ref<Texture2D>& texture)
+    {
+        if (ParticleMaterial)
+        {
+            m_ParticleMaterialTextures.albedo = texture;
+            m_ParticleMaterialFlags.hasAlbedo = (texture != nullptr);
+            ParticleMaterial->GetMaterialTextures() = m_ParticleMaterialTextures;
+        }
+        //if (!ParticleMaterial)
+        //{
+        //    ParticleMaterial = Material::Create("Particle Material");
+        //}
+
+        //// Actualizar la textura en el material
+        //auto& materialTextures = ParticleMaterial->GetMaterialTextures();
+        //materialTextures.albedo = texture;
+
+        // Actualizar las partículas existentes
+        for (auto& particle : Particles)
+        {
+            if (particle.Billboard)
+            {
+                particle.Billboard->SetMaterial(ParticleMaterial);
+            }
+        }
+
+         COFFEE_CORE_INFO("Particle texture updated: {}", texture ? texture->GetName() : "null");
     }
 
 } // namespace Coffee
