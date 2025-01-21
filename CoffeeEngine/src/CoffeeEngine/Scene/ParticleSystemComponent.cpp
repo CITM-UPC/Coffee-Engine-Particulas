@@ -18,6 +18,20 @@ namespace Coffee
             ParticleMesh = PrimitiveMesh::CreateQuad();
         }
     }
+    glm::vec3 ParticleSystemComponent::GenerateRandomVelocity() const
+    {
+        static std::random_device rd;
+        static std::mt19937 gen(rd());
+
+        auto randomFloat = [](float min, float max) -> float {
+            std::uniform_real_distribution<float> dis(min, max);
+            return dis(gen);
+        };
+
+        return glm::vec3(randomFloat(VelocityRangeConfig.Min.x, VelocityRangeConfig.Max.x),
+                         randomFloat(VelocityRangeConfig.Min.y, VelocityRangeConfig.Max.y),
+                         randomFloat(VelocityRangeConfig.Min.z, VelocityRangeConfig.Max.z));
+    }
 
     void ParticleSystemComponent::Update(float deltaTime)
     {
@@ -32,6 +46,24 @@ namespace Coffee
 
         for (auto& particle : Particles)
         {
+            if (VelocityRangeConfig.UseRange)
+            {
+                // Calculamos cuánto tiempo ha pasado desde el último cambio de velocidad
+                float timeInCurrentInterval = fmod(particle.Age, VelocityChangeInterval);
+
+                // Si estamos al inicio de un nuevo intervalo, generamos una nueva velocidad objetivo
+                if (timeInCurrentInterval < deltaTime)
+                {
+                    particle.InitialVelocity = particle.Velocity;
+                    particle.TargetVelocity = GenerateRandomVelocity();
+                }
+
+                // Interpolamos suavemente entre la velocidad inicial y la objetivo
+                float t = timeInCurrentInterval / VelocityChangeInterval;
+                t = glm::smoothstep(0.0f, 1.0f, t); // Suavizamos la transición
+                particle.Velocity = glm::mix(particle.InitialVelocity, particle.TargetVelocity, t);
+            }
+
             if (particle.Age < particle.LifeTime)
             {
                 particle.Velocity += Gravity * deltaTime;
@@ -88,7 +120,9 @@ namespace Coffee
     {
         Particle particle;
         particle.Position = GlobalEmitterPosition;
-        particle.Velocity = glm::vec3(0.0f); // Velocidad inicial
+        particle.Velocity = VelocityRangeConfig.UseRange ? GenerateRandomVelocity() : glm::vec3(0.0f);
+        particle.InitialVelocity = particle.Velocity;
+        particle.TargetVelocity = particle.Velocity;
         particle.Color = glm::vec4(1.0f);    // Color blanco
         particle.LifeTime = ParticleLifetime;
         particle.Age = 0.0f;

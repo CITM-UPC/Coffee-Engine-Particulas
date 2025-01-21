@@ -759,12 +759,27 @@ namespace Coffee {
                 ImGui::Checkbox("Apply Rotation", &particleSystem.ApplyRotation);
                 ImGui::DragFloat("Rotation Speed", &particleSystem.RotationSpeed, 0.1f);
                 ImGui::DragFloat("Particle Size", &particleSystem.ParticleSize, 0.1f, 0.1f); // Ajustar el tamaño
+                ImGui::Text("Velocity Range");
+                ImGui::Checkbox("Use Velocity Range", &particleSystem.VelocityRangeConfig.UseRange);
 
                 ImGui::Separator();
                 ImGui::Text("Live Particle Count: %zu", particleSystem.AliveParticleCount); // Mostrar el contador
 
                 ImGui::Separator();
                 ImGui::Text("Visual Properties");
+                if (particleSystem.VelocityRangeConfig.UseRange)
+                {
+                    ImGui::DragFloat3("Min Velocity", glm::value_ptr(particleSystem.VelocityRangeConfig.Min), 0.1f);
+                    ImGui::DragFloat3("Max Velocity", glm::value_ptr(particleSystem.VelocityRangeConfig.Max), 0.1f);
+                    ImGui::DragFloat("Change Interval", &particleSystem.VelocityChangeInterval, 0.1f, 0.1f, 10.0f);
+                    ImGui::SameLine();
+                    if (ImGui::Button("Reset##VelocityRange"))
+                    {
+                        particleSystem.VelocityRangeConfig.Min = glm::vec3(-1.0f, 0.0f, -1.0f);
+                        particleSystem.VelocityRangeConfig.Max = glm::vec3(1.0f, 2.0f, 1.0f);
+                        particleSystem.VelocityChangeInterval = 1.0f;
+                    }
+                }
                 if (particleSystem.GetParticleMaterial())
                 {
                     ImGui::Text("Material: %s", particleSystem.GetParticleMaterial()->GetName().c_str());
