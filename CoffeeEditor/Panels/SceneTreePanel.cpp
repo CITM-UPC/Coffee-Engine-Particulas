@@ -761,6 +761,8 @@ namespace Coffee {
                 ImGui::DragFloat("Particle Size", &particleSystem.ParticleSize, 0.1f, 0.1f); // Ajustar el tamaño
                 ImGui::Text("Velocity Range");
                 ImGui::Checkbox("Use Velocity Range", &particleSystem.VelocityRangeConfig.UseRange);
+                ImGui::Text("Size Properties");
+                ImGui::Checkbox("Use Size Range", &particleSystem.SizeRangeConfig.UseRange);
 
                 ImGui::Separator();
                 ImGui::Text("Live Particle Count: %zu", particleSystem.AliveParticleCount); // Mostrar el contador
@@ -780,6 +782,37 @@ namespace Coffee {
                         particleSystem.VelocityChangeInterval = 1.0f;
                     }
                 }
+                if (particleSystem.SizeRangeConfig.UseRange)
+                {
+                    ImGui::DragFloat("Min Size", &particleSystem.SizeRangeConfig.Min, 0.1f, 0.1f,
+                                     particleSystem.SizeRangeConfig.Max);
+                    ImGui::DragFloat("Max Size", &particleSystem.SizeRangeConfig.Max, 0.1f,
+                                     particleSystem.SizeRangeConfig.Min, 10.0f);
+                    ImGui::DragFloat("Size Change Interval", &particleSystem.SizeChangeInterval, 0.1f, 0.1f, 10.0f);
+                    ImGui::Checkbox("Repeat Size Interval", &particleSystem.SizeRangeConfig.RepeatInterval);
+                    ImGui::Checkbox("Start with Min Size", &particleSystem.SizeRangeConfig.StartWithMin);
+                    if (particleSystem.SizeRangeConfig.StartWithMin && particleSystem.SizeRangeConfig.StartWithMax)
+                    {
+                        // Si se activa Min, desactivamos Max
+                        particleSystem.SizeRangeConfig.StartWithMax = false;
+                    }
+
+                    ImGui::Checkbox("Start with Max Size", &particleSystem.SizeRangeConfig.StartWithMax);
+                    if (particleSystem.SizeRangeConfig.StartWithMax && particleSystem.SizeRangeConfig.StartWithMin)
+                    {
+                        // Si se activa Max, desactivamos Min
+                        particleSystem.SizeRangeConfig.StartWithMin = false;
+                    }
+                    ImGui::SameLine();
+                   
+                    if (ImGui::Button("Reset##SizeRange"))
+                    {
+                        particleSystem.SizeRangeConfig.Min = 0.5f;
+                        particleSystem.SizeRangeConfig.Max = 2.0f;
+                        particleSystem.SizeChangeInterval = 1.0f;
+                    }
+                }
+       
                 if (particleSystem.GetParticleMaterial())
                 {
                     ImGui::Text("Material: %s", particleSystem.GetParticleMaterial()->GetName().c_str());

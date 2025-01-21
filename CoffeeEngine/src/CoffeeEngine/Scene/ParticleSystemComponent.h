@@ -19,6 +19,15 @@ namespace Coffee
             glm::vec3 Max = {1.0f, 2.0f, 1.0f};
             bool UseRange = false; // Toggle para activar/desactivar el rango de velocidad
         };
+        struct SizeRange
+        {
+            float Min = 0.5f;
+            float Max = 2.0f;
+            bool UseRange = false;
+            bool StartWithMin = false;
+            bool StartWithMax = true;
+            bool RepeatInterval = true; 
+        };
         struct Particle
         {
             glm::vec3 Position;
@@ -29,6 +38,8 @@ namespace Coffee
             float LifeTime;
             float Age;
             float Size;
+            float InitialSize; // Tamaño inicial para interpolación
+            float TargetSize;  // Tamaño objetivo para interpolación
             Ref<Billboard> Billboard;
         };
 
@@ -55,12 +66,16 @@ namespace Coffee
         VelocityRange VelocityRangeConfig;
         float VelocityChangeInterval = 1.0f; // Intervalo de tiempo para cambiar la velocidad
 
+         // Nueva configuración para el tamaño
+        SizeRange SizeRangeConfig;
+        float SizeChangeInterval = 1.0f;
+
         std::vector<Particle> Particles;
 
       private:
         void EmitParticle();
         glm::vec3 GenerateRandomVelocity() const;
-
+        float GenerateRandomSize() const;
         template <class Archive> void serialize(Archive& archive)
         {
             archive(cereal::make_nvp("EmitterPosition", LocalEmitterPosition),
@@ -68,9 +83,13 @@ namespace Coffee
                     cereal::make_nvp("ParticleLifetime", ParticleLifetime), cereal::make_nvp("Gravity", Gravity),
                     cereal::make_nvp("ParticleSize", ParticleSize),
                     cereal::make_nvp("VelocityRangeMin", VelocityRangeConfig.Min),
-                   cereal::make_nvp("VelocityRangeMax", VelocityRangeConfig.Max),
-                   cereal::make_nvp("UseVelocityRange", VelocityRangeConfig.UseRange),
-                   cereal::make_nvp("VelocityChangeInterval", VelocityChangeInterval));
+                    cereal::make_nvp("VelocityRangeMax", VelocityRangeConfig.Max),
+                    cereal::make_nvp("UseVelocityRange", VelocityRangeConfig.UseRange),
+                    cereal::make_nvp("VelocityChangeInterval", VelocityChangeInterval),
+                    cereal::make_nvp("SizeRangeMin", SizeRangeConfig.Min),
+                    cereal::make_nvp("SizeRangeMax", SizeRangeConfig.Max),
+                    cereal::make_nvp("UseSizeRange", SizeRangeConfig.UseRange),
+                    cereal::make_nvp("SizeChangeInterval", SizeChangeInterval));
         }
 
         Ref<Material> ParticleMaterial;

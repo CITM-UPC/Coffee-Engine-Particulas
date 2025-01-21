@@ -32,7 +32,13 @@ namespace Coffee
                          randomFloat(VelocityRangeConfig.Min.y, VelocityRangeConfig.Max.y),
                          randomFloat(VelocityRangeConfig.Min.z, VelocityRangeConfig.Max.z));
     }
-
+    float ParticleSystemComponent::GenerateRandomSize() const
+    {
+        static std::random_device rd;
+        static std::mt19937 gen(rd());
+        std::uniform_real_distribution<float> dis(SizeRangeConfig.Min, SizeRangeConfig.Max);
+        return dis(gen);
+    }
     void ParticleSystemComponent::Update(float deltaTime)
     {
         AliveParticleCount = 0; // Reiniciar el contador en cada frame
@@ -46,26 +52,70 @@ namespace Coffee
 
         for (auto& particle : Particles)
         {
-            if (VelocityRangeConfig.UseRange)
-            {
-                // Calculamos cuánto tiempo ha pasado desde el último cambio de velocidad
-                float timeInCurrentInterval = fmod(particle.Age, VelocityChangeInterval);
-
-                // Si estamos al inicio de un nuevo intervalo, generamos una nueva velocidad objetivo
-                if (timeInCurrentInterval < deltaTime)
-                {
-                    particle.InitialVelocity = particle.Velocity;
-                    particle.TargetVelocity = GenerateRandomVelocity();
-                }
-
-                // Interpolamos suavemente entre la velocidad inicial y la objetivo
-                float t = timeInCurrentInterval / VelocityChangeInterval;
-                t = glm::smoothstep(0.0f, 1.0f, t); // Suavizamos la transición
-                particle.Velocity = glm::mix(particle.InitialVelocity, particle.TargetVelocity, t);
-            }
-
+            
             if (particle.Age < particle.LifeTime)
             {
+                if (VelocityRangeConfig.UseRange)
+                {
+                    // Calculamos cuánto tiempo ha pasado desde el último cambio de velocidad
+                    float timeInCurrentInterval = fmod(particle.Age, VelocityChangeInterval);
+
+                    // Si estamos al inicio de un nuevo intervalo, generamos una nueva velocidad objetivo
+                    if (timeInCurrentInterval < deltaTime)
+                    {
+                        particle.InitialVelocity = particle.Velocity;
+                        particle.TargetVelocity = GenerateRandomVelocity();
+                    }
+
+                    // Interpolamos suavemente entre la velocidad inicial y la objetivo
+                    float t = timeInCurrentInterval / VelocityChangeInterval;
+                    t = glm::smoothstep(0.0f, 1.0f, t); // Suavizamos la transición
+                    particle.Velocity = glm::mix(particle.InitialVelocity, particle.TargetVelocity, t);
+                }
+                if (SizeRangeConfig.UseRange)
+                {
+                    float timeInCurrentInterval;
+                    if (SizeRangeConfig.RepeatInterval)
+                    {
+                        timeInCurrentInterval = fmod(particle.Age, SizeChangeInterval);
+                    }
+                    else
+                    {
+                        timeInCurrentInterval = particle.Age;
+                    }
+
+                    // Solo generamos nuevo tamaño objetivo si estamos repitiendo intervalos
+                    if (SizeRangeConfig.RepeatInterval && timeInCurrentInterval < deltaTime)
+                    {
+                        particle.InitialSize = particle.Size;
+                        particle.TargetSize = GenerateRandomSize();
+                    }
+                    else if (!SizeRangeConfig.RepeatInterval && particle.Age < deltaTime)
+                    {
+                        // Si no repetimos, solo establecemos los tamaños inicial y objetivo una vez
+                        particle.InitialSize =
+                            SizeRangeConfig.StartWithMin
+                                ? SizeRangeConfig.Min
+                                : (SizeRangeConfig.StartWithMax ? SizeRangeConfig.Max : particle.Size);
+                        particle.TargetSize =
+                            SizeRangeConfig.StartWithMin
+                                ? SizeRangeConfig.Max
+                                : (SizeRangeConfig.StartWithMax ? SizeRangeConfig.Min : GenerateRandomSize());
+                    }
+
+                    float t;
+                    if (SizeRangeConfig.RepeatInterval)
+                    {
+                        t = timeInCurrentInterval / SizeChangeInterval;
+                    }
+                    else
+                    {
+                        t = particle.Age /
+                            particle.LifeTime; // Usamos toda la vida de la partícula para la interpolación
+                    }
+                    t = glm::smoothstep(0.0f, 1.0f, t);
+                    particle.Size = glm::mix(particle.InitialSize, particle.TargetSize, t);
+                }
                 particle.Velocity += Gravity * deltaTime;
                 particle.Position += particle.Velocity * deltaTime;
                 particle.Age += deltaTime;
@@ -126,7 +176,34 @@ namespace Coffee
         particle.Color = glm::vec4(1.0f);    // Color blanco
         particle.LifeTime = ParticleLifetime;
         particle.Age = 0.0f;
-        particle.Size = ParticleSize;
+        particle.Size = SizeRangeConfig.UseRange ? GenerateRandomSize() : ParticleSize;
+        particle.InitialSize = particle.Size;
+        particle.TargetSize = particle.Size;
+        if (SizeRangeConfig.UseRange)
+        {
+            if (SizeRangeConfig.StartWithMin)
+            {
+                particle.Size = SizeRangeConfig.Min;
+                particle.InitialSize = SizeRangeConfig.Min;
+            }
+            else if (SizeRangeConfig.StartWithMax)
+            {
+                particle.Size = SizeRangeConfig.Max;
+                particle.InitialSize = SizeRangeConfig.Max;
+            }
+            else
+            {
+                particle.Size = GenerateRandomSize();
+                particle.InitialSize = particle.Size;
+            }
+            particle.TargetSize = particle.Size;
+        }
+        else
+        {
+            particle.Size = ParticleSize;
+            particle.InitialSize = particle.Size;
+            particle.TargetSize = particle.Size;
+        }
 
         particle.Billboard = Billboard::Create(BillboardType::SCREEN_ALIGNED);
         particle.Billboard->SetPosition(particle.Position);
