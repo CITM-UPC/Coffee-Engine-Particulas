@@ -18,6 +18,27 @@ namespace Coffee
             ParticleMesh = PrimitiveMesh::CreateQuad();
         }
     }
+    glm::vec3 ParticleSystemComponent::GenerateRandomVelocity() const
+    {
+        static std::random_device rd;
+        static std::mt19937 gen(rd());
+
+        auto randomFloat = [](float min, float max) -> float {
+            std::uniform_real_distribution<float> dis(min, max);
+            return dis(gen);
+        };
+
+        return glm::vec3(randomFloat(VelocityRangeConfig.Min.x, VelocityRangeConfig.Max.x),
+                         randomFloat(VelocityRangeConfig.Min.y, VelocityRangeConfig.Max.y),
+                         randomFloat(VelocityRangeConfig.Min.z, VelocityRangeConfig.Max.z));
+    }
+    float ParticleSystemComponent::GenerateRandomSize() const
+    {
+        static std::random_device rd;
+        static std::mt19937 gen(rd());
+        std::uniform_real_distribution<float> dis(SizeRangeConfig.Min, SizeRangeConfig.Max);
+        return dis(gen);
+    }
 
     void ParticleSystemComponent::Update(float deltaTime)
     {
@@ -32,6 +53,61 @@ namespace Coffee
 
         for (auto& particle : Particles)
         {
+            if (VelocityRangeConfig.UseRange)
+            {
+                float timeInCurrentInterval = fmod(particle.Age, VelocityChangeInterval);
+                if (timeInCurrentInterval < deltaTime)
+                {
+                    particle.InitialVelocity = particle.Velocity;
+                    particle.TargetVelocity = GenerateRandomVelocity();
+                }
+                float t = timeInCurrentInterval / VelocityChangeInterval;
+                t = glm::smoothstep(0.0f, 1.0f, t); 
+                particle.Velocity = glm::mix(particle.InitialVelocity, particle.TargetVelocity, t);
+            }
+            if (SizeRangeConfig.UseRange)
+            {
+                // Si RepeatInterval es false, usamos el tiempo total de vida en lugar de hacer módulo
+                float timeInCurrentInterval;
+                if (SizeRangeConfig.RepeatInterval)
+                {
+                    timeInCurrentInterval = fmod(particle.Age, SizeChangeInterval);
+                }
+                else
+                {
+                    timeInCurrentInterval = particle.Age;
+                }
+
+                // Solo generamos nuevo tamaño objetivo si estamos repitiendo intervalos
+                if (SizeRangeConfig.RepeatInterval && timeInCurrentInterval < deltaTime)
+                {
+                    particle.InitialSize = particle.Size;
+                    particle.TargetSize = GenerateRandomSize();
+                }
+                else if (!SizeRangeConfig.RepeatInterval && particle.Age < deltaTime)
+                {
+                    // Si no repetimos, solo establecemos los tamaños inicial y objetivo una vez
+                    particle.InitialSize = SizeRangeConfig.StartWithMin
+                                               ? SizeRangeConfig.Min
+                                               : (SizeRangeConfig.StartWithMax ? SizeRangeConfig.Max : particle.Size);
+                    particle.TargetSize =
+                        SizeRangeConfig.StartWithMin
+                            ? SizeRangeConfig.Max
+                            : (SizeRangeConfig.StartWithMax ? SizeRangeConfig.Min : GenerateRandomSize());
+                }
+
+                float t;
+                if (SizeRangeConfig.RepeatInterval)
+                {
+                    t = timeInCurrentInterval / SizeChangeInterval;
+                }
+                else
+                {
+                    t = particle.Age / particle.LifeTime; // Usamos toda la vida de la partícula para la interpolación
+                }
+                t = glm::smoothstep(0.0f, 1.0f, t);
+                particle.Size = glm::mix(particle.InitialSize, particle.TargetSize, t);
+            }
             if (particle.Age < particle.LifeTime)
             {
                 particle.Velocity += Gravity * deltaTime;
@@ -76,11 +152,39 @@ namespace Coffee
     {
         Particle particle;
         particle.Position = LocalEmitterPosition;
-        particle.Velocity = glm::vec3(0.0f);
+        particle.Velocity = VelocityRangeConfig.UseRange ? GenerateRandomVelocity() : glm::vec3(0.0f);
+        particle.InitialVelocity = particle.Velocity;
+        particle.TargetVelocity = particle.Velocity;
         particle.Color = glm::vec4(1.0f);
         particle.LifeTime = ParticleLifetime;
         particle.Age = 0.0f;
-        particle.Size = ParticleSize;
+
+        if (SizeRangeConfig.UseRange)
+        {
+            if (SizeRangeConfig.StartWithMin)
+            {
+                particle.Size = SizeRangeConfig.Min;
+                particle.InitialSize = SizeRangeConfig.Min;
+            }
+            else if (SizeRangeConfig.StartWithMax)
+            {
+                particle.Size = SizeRangeConfig.Max;
+                particle.InitialSize = SizeRangeConfig.Max;
+            }
+            else
+            {
+                particle.Size = GenerateRandomSize();
+                particle.InitialSize = particle.Size;
+            }
+            particle.TargetSize = particle.Size;
+        }
+        else
+        {
+            particle.Size = ParticleSize;
+            particle.InitialSize = particle.Size;
+            particle.TargetSize = particle.Size;
+        }
+
 
         Particles.push_back(particle);
         COFFEE_CORE_INFO("Emitted particle");
