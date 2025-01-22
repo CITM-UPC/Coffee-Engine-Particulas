@@ -763,7 +763,8 @@ namespace Coffee {
                 ImGui::Checkbox("Use Velocity Range", &particleSystem.VelocityRangeConfig.UseRange);
                 ImGui::Text("Size Properties");
                 ImGui::Checkbox("Use Size Range", &particleSystem.SizeRangeConfig.UseRange);
-
+                ImGui::Text("Emission Area");
+                ImGui::Checkbox("Use Emission Area", &particleSystem.EmissionAreaConfig.UseEmissionArea);
                 ImGui::Separator();
                 ImGui::Text("Live Particle Count: %zu", particleSystem.AliveParticleCount); // Mostrar el contador
 
@@ -812,7 +813,41 @@ namespace Coffee {
                         particleSystem.SizeChangeInterval = 1.0f;
                     }
                 }
-       
+                if (particleSystem.EmissionAreaConfig.UseEmissionArea)
+                {
+                    // Selector de forma
+                    const char* shapes[] = {"Box", "Sphere", "Circle"};
+                    int currentShape = static_cast<int>(particleSystem.EmissionAreaConfig.AreaShape);
+                    if (ImGui::Combo("Area Shape", &currentShape, shapes, IM_ARRAYSIZE(shapes)))
+                    {
+                        particleSystem.EmissionAreaConfig.AreaShape =
+                            static_cast<ParticleSystemComponent::EmissionArea::Shape>(currentShape);
+                    }
+
+                    // Control de tamaño del área
+                    ImGui::Text("Area Size");
+                    switch (particleSystem.EmissionAreaConfig.AreaShape)
+                    {
+                    case ParticleSystemComponent::EmissionArea::Shape::Box:
+                        ImGui::DragFloat3("Size", glm::value_ptr(particleSystem.EmissionAreaConfig.Size), 0.1f, 0.0f,
+                                          100.0f);
+                        break;
+
+                    case ParticleSystemComponent::EmissionArea::Shape::Sphere: {
+
+                        float sphereSize = particleSystem.EmissionAreaConfig.Size.x;
+                        if (ImGui::DragFloat("Radius", &sphereSize, 0.1f, 0.0f, 100.0f))
+                        {
+                            particleSystem.EmissionAreaConfig.Size = glm::vec3(sphereSize);
+                        }
+                        break;
+                    }
+                    case ParticleSystemComponent::EmissionArea::Shape::Circle:
+                        ImGui::DragFloat2("Radius (X,Z)", glm::value_ptr(particleSystem.EmissionAreaConfig.Size), 0.1f,
+                                          0.0f, 100.0f);
+                        break;
+                    }
+                }
                 if (particleSystem.GetParticleMaterial())
                 {
                     ImGui::Text("Material: %s", particleSystem.GetParticleMaterial()->GetName().c_str());

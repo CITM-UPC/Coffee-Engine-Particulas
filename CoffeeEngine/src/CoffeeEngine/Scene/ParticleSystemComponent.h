@@ -27,6 +27,17 @@ namespace Coffee
             bool StartWithMax = false;
             bool RepeatInterval = true;
         };
+        struct EmissionArea
+        {
+            glm::vec3 Size = {0.0f, 0.0f, 0.0f}; 
+            bool UseEmissionArea = false;        
+            enum class Shape
+            {
+                Box,
+                Sphere,
+                Circle
+            } AreaShape = Shape::Box;
+        };
         struct Particle
         {
             glm::vec3 Position;
@@ -66,13 +77,15 @@ namespace Coffee
         SizeRange SizeRangeConfig;
         float SizeChangeInterval = 1.0f;
 
+        EmissionArea EmissionAreaConfig;
+
         std::vector<Particle> Particles;
 
       private:
         void EmitParticle();
         glm::vec3 GenerateRandomVelocity() const;
         float GenerateRandomSize() const;
-
+        glm::vec3 GenerateRandomPositionInArea() const;
         template <class Archive> void serialize(Archive& archive)
         {
             archive(cereal::make_nvp("EmitterPosition", LocalEmitterPosition),
@@ -80,13 +93,15 @@ namespace Coffee
                     cereal::make_nvp("ParticleLifetime", ParticleLifetime), cereal::make_nvp("Gravity", Gravity),
                     cereal::make_nvp("ParticleSize", ParticleSize),
                     cereal::make_nvp("VelocityRangeMin", VelocityRangeConfig.Min),
-                   cereal::make_nvp("VelocityRangeMax", VelocityRangeConfig.Max),
-                   cereal::make_nvp("UseVelocityRange", VelocityRangeConfig.UseRange),
-                   cereal::make_nvp("VelocityChangeInterval", VelocityChangeInterval),
+                    cereal::make_nvp("VelocityRangeMax", VelocityRangeConfig.Max),
+                    cereal::make_nvp("UseVelocityRange", VelocityRangeConfig.UseRange),
+                    cereal::make_nvp("VelocityChangeInterval", VelocityChangeInterval),
                     cereal::make_nvp("SizeRangeMin", SizeRangeConfig.Min),
                     cereal::make_nvp("SizeRangeMax", SizeRangeConfig.Max),
                     cereal::make_nvp("UseSizeRange", SizeRangeConfig.UseRange),
-                    cereal::make_nvp("SizeChangeInterval", SizeChangeInterval));
+                    cereal::make_nvp("EmissionArea", EmissionAreaConfig.Size),
+                    cereal::make_nvp("EmissionArea", EmissionAreaConfig.UseEmissionArea),
+                    cereal::make_nvp("EmissionArea", EmissionAreaConfig.AreaShape)); 
         }
 
         Ref<Material> ParticleMaterial;

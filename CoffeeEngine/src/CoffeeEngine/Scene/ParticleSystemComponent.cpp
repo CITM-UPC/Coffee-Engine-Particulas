@@ -39,7 +39,53 @@ namespace Coffee
         std::uniform_real_distribution<float> dis(SizeRangeConfig.Min, SizeRangeConfig.Max);
         return dis(gen);
     }
+    glm::vec3 ParticleSystemComponent::GenerateRandomPositionInArea() const
+    {
+        static std::random_device rd;
+        static std::mt19937 gen(rd());
 
+        auto randomFloat = [](float min, float max) -> float {
+            std::uniform_real_distribution<float> dis(min, max);
+            return dis(gen);
+        };
+
+        glm::vec3 randomPosition = LocalEmitterPosition;
+
+        if (EmissionAreaConfig.UseEmissionArea)
+        {
+            switch (EmissionAreaConfig.AreaShape)
+            {
+            case EmissionArea::Shape::Box: {
+                randomPosition.x += randomFloat(-EmissionAreaConfig.Size.x, EmissionAreaConfig.Size.x) * 0.5f;
+                randomPosition.y += randomFloat(-EmissionAreaConfig.Size.y, EmissionAreaConfig.Size.y) * 0.5f;
+                randomPosition.z += randomFloat(-EmissionAreaConfig.Size.z, EmissionAreaConfig.Size.z) * 0.5f;
+                break;
+            }
+            case EmissionArea::Shape::Sphere: {
+                float radius = glm::length(EmissionAreaConfig.Size) * 0.5f;
+                float theta = randomFloat(0.0f, glm::two_pi<float>());
+                float phi = randomFloat(0.0f, glm::pi<float>());
+                float r = randomFloat(0.0f, radius);
+
+                randomPosition.x += r * sin(phi) * cos(theta);
+                randomPosition.y += r * sin(phi) * sin(theta);
+                randomPosition.z += r * cos(phi);
+                break;
+            }
+            case EmissionArea::Shape::Circle: {
+                float radius = glm::length(glm::vec2(EmissionAreaConfig.Size.x, EmissionAreaConfig.Size.z)) * 0.5f;
+                float theta = randomFloat(0.0f, glm::two_pi<float>());
+                float r = randomFloat(0.0f, radius);
+
+                randomPosition.x += r * cos(theta);
+                randomPosition.z += r * sin(theta);
+                break;
+            }
+            }
+        }
+
+        return randomPosition;
+    }
     void ParticleSystemComponent::Update(float deltaTime)
     {
         AliveParticleCount = 0;
@@ -184,7 +230,10 @@ namespace Coffee
             particle.InitialSize = particle.Size;
             particle.TargetSize = particle.Size;
         }
-
+        if (EmissionAreaConfig.UseEmissionArea)
+        {
+            particle.Position = GenerateRandomPositionInArea();
+        }
 
         Particles.push_back(particle);
         COFFEE_CORE_INFO("Emitted particle");
