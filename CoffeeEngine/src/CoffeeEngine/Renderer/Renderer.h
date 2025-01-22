@@ -149,20 +149,6 @@ namespace Coffee {
         static void Submit(const LightComponent& light);
 
         /**
-         * @brief Submits a billboard render command.
-         * @param command The billboard render command.
-         */
-        static void Submit(const BillboardRenderCommand& command);
-
-        /**
-         * @brief Submits a billboard with the specified material and entity ID.
-         * @param billboard The billboard.
-         * @param material The material.
-         * @param entityID The entity ID.
-         */
-        static void Submit(const Ref<Billboard>& billboard, const Ref<Material>& material, uint32_t entityID = 4294967295);
-
-        /**
          * @brief Resizes the renderer to the specified width and height.
          * @param width The new width.
          * @param height The new height.

@@ -285,16 +285,6 @@ namespace Coffee {
         s_Stats.DrawCalls++;
     }
 
-    void Renderer::Submit(const BillboardRenderCommand& command)
-    {
-        BillboardRenderer::Submit(command);
-    }
-
-    void Renderer::Submit(const Ref<Billboard>& billboard, const Ref<Material>& material, uint32_t entityID)
-    {
-        BillboardRenderer::Submit(billboard, material, entityID);
-    }
-
     void Renderer::OnResize(uint32_t width, uint32_t height)
     {
         s_viewportWidth = width;
