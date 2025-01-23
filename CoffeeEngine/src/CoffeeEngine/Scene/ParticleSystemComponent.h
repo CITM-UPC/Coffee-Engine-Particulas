@@ -85,6 +85,7 @@ namespace Coffee
             float LocalRotation = 0.0f;
             bool EnableRotation = false;
             Ref<Billboard> Billboard;
+            Ref<Texture2D> Texture;
 
             // Función de serialización
             template <class Archive> void serialize(Archive& archive)
@@ -102,7 +103,13 @@ namespace Coffee
         const Ref<Material>& GetParticleMaterial() const { return ParticleMaterial; }
         const Ref<Mesh>& GetParticleMesh() const { return ParticleMesh; }
         const Ref<Texture2D>& GetParticleTexture() const { return ParticleTexture; }
-        void SetParticleTexture(const Ref<Texture2D>& texture) { ParticleTexture = texture; }
+        void SetParticleTexture(const Ref<Texture2D>& texture) { 
+            ParticleTexture = texture; 
+             if (ParticleMaterial) 
+            {
+                ParticleMaterial->GetMaterialTextures().albedo = texture; 
+            }
+        }
 
         // Constructor
         ParticleSystemComponent();

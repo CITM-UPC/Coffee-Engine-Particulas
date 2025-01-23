@@ -743,6 +743,77 @@ namespace Coffee {
 
         if (entity.HasComponent<ParticleSystemComponent>())
         {
+            auto DrawParticleTextureWidget = [&](const std::string& label, Ref<Texture2D>& texture) {
+                auto& particleSystem = entity.GetComponent<ParticleSystemComponent>();
+
+                uint32_t textureID = texture ? texture->GetID() : 0;
+                ImGui::ImageButton(label.c_str(), (ImTextureID)textureID, {64, 64});
+
+                auto textureImageFormat = [](ImageFormat format) -> std::string {
+                    switch (format)
+                    {
+                    case ImageFormat::R8:
+                        return "R8";
+                    case ImageFormat::RGB8:
+                        return "RGB8";
+                    case ImageFormat::RGBA8:
+                        return "RGBA8";
+                    case ImageFormat::SRGB8:
+                        return "SRGB8";
+                    case ImageFormat::SRGBA8:
+                        return "SRGBA8";
+                    case ImageFormat::RGBA32F:
+                        return "RGBA32F";
+                    case ImageFormat::DEPTH24STENCIL8:
+                        return "DEPTH24STENCIL8";
+                    }
+                };
+
+                if (ImGui::IsItemHovered() && texture)
+                {
+                    ImGui::SetTooltip("Name: %s\nSize: %d x %d\nPath: %s", texture->GetName().c_str(),
+                                      texture->GetWidth(), texture->GetHeight(),
+                                      textureImageFormat(texture->GetImageFormat()).c_str(),
+                                      texture->GetPath().c_str());
+                }
+
+                if (ImGui::BeginDragDropTarget())
+                {
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("RESOURCE"))
+                    {
+                        const Ref<Resource>& resource = *(Ref<Resource>*)payload->Data;
+                        if (resource->GetType() == ResourceType::Texture2D)
+                        {
+                            const Ref<Texture2D>& t = std::static_pointer_cast<Texture2D>(resource);
+                            texture = t;
+                            particleSystem.SetParticleTexture(texture);
+                        }
+                    }
+                    ImGui::EndDragDropTarget();
+                }
+
+                ImGui::SameLine();
+                if (ImGui::BeginCombo((label + "texture").c_str(), "", ImGuiComboFlags_NoPreview))
+                {
+                    if (ImGui::Selectable("Clear"))
+                    {
+                        texture = nullptr;
+                        particleSystem.SetParticleTexture(nullptr); 
+                    }
+                    if (ImGui::Selectable("Open"))
+                    {
+                        std::string path = FileDialog::OpenFile({}).string();
+                        if (!path.empty())
+                        {
+                            Ref<Texture2D> t = Texture2D::Load(path);
+                            texture = t;
+                            particleSystem.SetParticleTexture(
+                                texture); 
+                        }
+                    }
+                    ImGui::EndCombo();
+                }
+            };
             auto& particleSystem = entity.GetComponent<ParticleSystemComponent>();
             bool isCollapsingHeaderOpen = true;
             if (ImGui::CollapsingHeader("Particle System", &isCollapsingHeaderOpen, ImGuiTreeNodeFlags_DefaultOpen))
@@ -791,32 +862,12 @@ namespace Coffee {
                         ImGui::Text("No texture assigned");
                     }
 
-                    if (ImGui::Button("Load Texture"))
-                    {
-                        Coffee::FileDialogArgs args;
-                        args.Filters.push_back({"PNG", "*.png"}); // Filtro para archivos PNG
+                   DrawParticleTextureWidget("Load Particle Texture", materialTextures.albedo);
 
-                        // Abrir el cuadro de di�logo
-                        std::filesystem::path filepath = Coffee::FileDialog::OpenFile(args);
-                        if (!filepath.empty())
-                        {
-                            // Convertir std::string a std::filesystem::path
-                            std::filesystem::path path(filepath);
-
-                            // Crear la textura utilizando el constructor
-                            auto texture = std::make_shared<Texture2D>(path);
-
-                            if (texture)
-                            {
-                                COFFEE_CORE_INFO("Texture loaded from: {}", filepath.string());
-                                particleSystem.SetParticleTexture(texture);
-                            }
-                            else
-                            {
-                                COFFEE_CORE_ERROR("Failed to load texture from: {}", filepath.string());
-                            }
-                        }
-                    }
+                   if (!isCollapsingHeaderOpen)
+                   {
+                       entity.RemoveComponent<ParticleSystemComponent>();
+                   }
                 }
 
                 if (particleSystem.VelocityRangeConfig.UseRange)
