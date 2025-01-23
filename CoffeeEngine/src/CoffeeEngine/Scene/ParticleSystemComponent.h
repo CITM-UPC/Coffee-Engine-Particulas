@@ -54,6 +54,8 @@ namespace Coffee
 
         const Ref<Material>& GetParticleMaterial() const { return ParticleMaterial; }
         const Ref<Mesh>& GetParticleMesh() const { return ParticleMesh; }
+        const Ref<Texture2D>& GetParticleTexture() const { return ParticleTexture; }
+        void SetParticleTexture(const Ref<Texture2D>& texture) { ParticleTexture = texture; }
 
         ParticleSystemComponent();
         void Update(float deltaTime);
@@ -106,6 +108,8 @@ namespace Coffee
 
         Ref<Material> ParticleMaterial;
         Ref<Mesh> ParticleMesh;
+        Ref<Texture2D> ParticleTexture; // Textura utilizada para las partículas
+
         float EmissionAccumulator = 0.0f;
     };
 } // namespace Coffee

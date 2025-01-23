@@ -174,6 +174,11 @@ namespace Coffee
     {
         std::vector<RenderCommand> renderCommands;
 
+        if (ParticleTexture)
+        {
+            ParticleMaterial->GetMaterialTextures().albedo = ParticleTexture;
+        }
+
         for (const auto& particle : Particles)
         {
             if (particle.Age < particle.LifeTime)
@@ -193,6 +198,7 @@ namespace Coffee
             Renderer::Submit(command);
         }
     }
+
 
     void ParticleSystemComponent::EmitParticle()
     {

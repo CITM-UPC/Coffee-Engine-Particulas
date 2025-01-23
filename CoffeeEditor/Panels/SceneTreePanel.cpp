@@ -1,4 +1,4 @@
-#include "SceneTreePanel.h"
+ï»¿#include "SceneTreePanel.h"
 
 #include "CoffeeEngine/Core/Base.h"
 #include "CoffeeEngine/Core/FileDialog.h"
@@ -758,7 +758,7 @@ namespace Coffee {
                 ImGui::DragFloat3("Gravity", glm::value_ptr(particleSystem.Gravity), 0.1f);
                 ImGui::Checkbox("Apply Rotation", &particleSystem.ApplyRotation);
                 ImGui::DragFloat("Rotation Speed", &particleSystem.RotationSpeed, 0.1f);
-                ImGui::DragFloat("Particle Size", &particleSystem.ParticleSize, 0.1f, 0.1f); // Ajustar el tamaño
+                ImGui::DragFloat("Particle Size", &particleSystem.ParticleSize, 0.1f, 0.1f); // Ajustar el tamaÃ±o
                 ImGui::Text("Velocity Range");
                 ImGui::Checkbox("Use Velocity Range", &particleSystem.VelocityRangeConfig.UseRange);
                 ImGui::Text("Size Properties");
@@ -769,7 +769,54 @@ namespace Coffee {
                 ImGui::Text("Live Particle Count: %zu", particleSystem.AliveParticleCount); // Mostrar el contador
 
                 ImGui::Separator();
+
                 ImGui::Text("Visual Properties");
+
+                auto& material = particleSystem.GetParticleMaterial();
+                if (material)
+                {
+                    auto& materialTextures = material->GetMaterialTextures();
+                    if (materialTextures.albedo)
+                    {
+                        ImGui::Text("Current Texture: %s", materialTextures.albedo->GetName().c_str());
+                        if (ImGui::Button("Remove Texture"))
+                        {
+                            particleSystem.SetParticleTexture(nullptr);
+                        }
+                    }
+                    else
+                    {
+                        ImGui::Text("No texture assigned");
+                    }
+
+                    if (ImGui::Button("Load Texture"))
+                    {
+                        Coffee::FileDialogArgs args;
+                        args.Filters.push_back({"PNG", "*.png"}); // Filtro para archivos PNG
+
+                        // Abrir el cuadro de diï¿½logo
+                        std::filesystem::path filepath = Coffee::FileDialog::OpenFile(args);
+                        if (!filepath.empty())
+                        {
+                            // Convertir std::string a std::filesystem::path
+                            std::filesystem::path path(filepath);
+
+                            // Crear la textura utilizando el constructor
+                            auto texture = std::make_shared<Texture2D>(path);
+
+                            if (texture)
+                            {
+                                COFFEE_CORE_INFO("Texture loaded from: {}", filepath.string());
+                                particleSystem.SetParticleTexture(texture);
+                            }
+                            else
+                            {
+                                COFFEE_CORE_ERROR("Failed to load texture from: {}", filepath.string());
+                            }
+                        }
+                    }
+                }
+
                 if (particleSystem.VelocityRangeConfig.UseRange)
                 {
                     ImGui::DragFloat3("Min Velocity", glm::value_ptr(particleSystem.VelocityRangeConfig.Min), 0.1f);
@@ -824,7 +871,7 @@ namespace Coffee {
                             static_cast<ParticleSystemComponent::EmissionArea::Shape>(currentShape);
                     }
 
-                    // Control de tamaño del área
+                    // Control de tamaÃ±o del Ã¡rea
                     ImGui::Text("Area Size");
                     switch (particleSystem.EmissionAreaConfig.AreaShape)
                     {
@@ -863,61 +910,8 @@ namespace Coffee {
                 else
                 {
                     ImGui::Text("Mesh: None");
-                }
+                }                
 
-                // Añadir sección de textura
-                ImGui::Text("Particle Texture");
-                auto& material = particleSystem.GetParticleMaterial();
-                //if (material)
-                //{
-                //    auto& materialTextures = material->GetMaterialTextures();
-                //    if (materialTextures.albedo)
-                //    {
-                //        ImGui::Text("Current Texture: %s", materialTextures.albedo->GetName().c_str());
-                //        if (ImGui::Button("Remove Texture"))
-                //        {
-                //            particleSystem.SetParticleTexture(nullptr);
-                //        }
-                //    }
-                //    else
-                //    {
-                //        ImGui::Text("No texture assigned");
-                //    }
-
-                //    if (ImGui::Button("Load Texture"))
-                //    {
-                //        Coffee::FileDialogArgs args;
-                //        args.Filters.push_back({"PNG", "*.png"}); // Filtro para archivos PNG
-
-                //        // Abrir el cuadro de diálogo
-                //        std::filesystem::path filepath = Coffee::FileDialog::OpenFile(args);
-                //        if (!filepath.empty())
-                //        {
-                //            // Convertir std::string a std::filesystem::path
-                //            std::filesystem::path path(filepath);
-
-                //            // Crear la textura utilizando el constructor
-                //            auto texture = std::make_shared<Texture2D>(path);
-
-                //            if (texture)
-                //            {
-                //                COFFEE_CORE_INFO("Texture loaded from: {}", filepath.string());
-                //                particleSystem.SetParticleTexture(texture);
-                //            }
-                //            else
-                //            {
-                //                COFFEE_CORE_ERROR("Failed to load texture from: {}", filepath.string());
-                //            }
-                //        }
-                //    }
-
-                //    // Color tint usando las propiedades del material
-                //    auto& properties = material->GetMaterialProperties();
-                //    if (ImGui::ColorEdit4("Tint Color", glm::value_ptr(properties.color)))
-                //    {
-                //        // El color se actualiza automáticamente en las propiedades del material
-                //    }
-                //}
 
                 if (!isCollapsingHeaderOpen)
                 {
