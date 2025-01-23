@@ -173,9 +173,9 @@ namespace Coffee {
             glm::vec3 cameraUp = camera.GetUpDirection();
 
             // Renderizar las partículas con la información de la cámara
-            particleSystem.Render();
+            particleSystem.Render(cameraPosition, cameraUp);
         }
-
+        BillboardRenderer::EndScene();
         Renderer::EndScene();
     }
 
@@ -300,9 +300,9 @@ namespace Coffee {
             glm::vec3 cameraUp = glm::normalize(glm::vec3(cameraTransform[1]));
 
             // Renderizar las partículas con la información de la cámara
-            particleSystem.Render();
+            particleSystem.Render(cameraPosition, cameraUp);
         }
-
+        BillboardRenderer::EndScene();
         Renderer::EndScene();
     }
 

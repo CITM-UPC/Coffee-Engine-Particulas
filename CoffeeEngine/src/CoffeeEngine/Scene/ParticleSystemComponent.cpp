@@ -3,6 +3,7 @@
 #include "CoffeeEngine/Core/Log.h"
 #include "CoffeeEngine/Renderer/Renderer.h"
 #include "CoffeeEngine/Scene/PrimitiveMesh.h"
+#include "CoffeeEngine/Renderer/BillboardRenderer.h"
 #include <glm/gtx/transform.hpp>
 #include <random>
 
@@ -159,6 +160,9 @@ namespace Coffee
                 particle.Velocity += Gravity * deltaTime;
                 particle.Position += particle.Velocity * deltaTime;
                 particle.Age += deltaTime;
+
+                particle.Billboard->SetPosition(particle.Position);
+
                 AliveParticleCount++;
             }
         }
@@ -170,7 +174,7 @@ namespace Coffee
         COFFEE_CORE_INFO("Alive particles: {}", AliveParticleCount);
     }
 
-    void ParticleSystemComponent::Render()
+    void ParticleSystemComponent::Render(const glm::vec3& cameraPosition, const glm::vec3& cameraUp)
     {
         std::vector<RenderCommand> renderCommands;
 
@@ -183,13 +187,13 @@ namespace Coffee
         {
             if (particle.Age < particle.LifeTime)
             {
-                glm::mat4 transform = glm::translate(glm::mat4(1.0f), particle.Position) *
-                                      glm::scale(glm::mat4(1.0f), glm::vec3(particle.Size));
-
+                glm::mat4 transform = particle.Billboard->CalculateTransform(cameraPosition, cameraUp);
+                
                 renderCommands.push_back({
                     transform, ParticleMesh, ParticleMaterial,
-                    0 // Entity ID opcional para identificación
+                    0 // Entity ID
                 });
+
             }
         }
 
@@ -240,6 +244,11 @@ namespace Coffee
         {
             particle.Position = GenerateRandomPositionInArea();
         }
+
+        particle.Billboard = Billboard::Create(ParticleBillboardType);
+        particle.Billboard->SetPosition(particle.Position);
+        particle.Billboard->SetScale(glm::vec3(particle.Size));
+        particle.Billboard->SetMaterial(ParticleMaterial);
 
         Particles.push_back(particle);
         COFFEE_CORE_INFO("Emitted particle");
