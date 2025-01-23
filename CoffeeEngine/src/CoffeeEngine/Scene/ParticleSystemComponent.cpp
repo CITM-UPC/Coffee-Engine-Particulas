@@ -220,7 +220,7 @@ namespace Coffee
     void ParticleSystemComponent::EmitParticle()
     {
         Particle particle;
-        particle.Position = LocalEmitterPosition;
+        particle.Position = GlobalEmitterPosition;
         particle.Velocity = VelocityRangeConfig.UseRange ? GenerateRandomVelocity() : glm::vec3(0.0f);
         particle.InitialVelocity = particle.Velocity;
         particle.TargetVelocity = particle.Velocity;
