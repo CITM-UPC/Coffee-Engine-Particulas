@@ -82,6 +82,8 @@ namespace Coffee
             float Size;
             float InitialSize;
             float TargetSize;
+            float LocalRotation = 0.0f;
+            bool EnableRotation = false;
             Ref<Billboard> Billboard;
 
             // Función de serialización
@@ -112,6 +114,7 @@ namespace Coffee
         // Configuración del emisor
         glm::vec3 LocalEmitterPosition = {0.0f, 0.0f, 0.0f};
         glm::vec3 GlobalEmitterPosition = {0.0f, 0.0f, 0.0f};
+        float ParticleRotation = 0.0f;
         float EmissionRate = 10.0f;
         float ParticleLifetime = 5.0f;
         glm::vec3 Gravity = {0.0f, -9.81f, 0.0f};

@@ -100,6 +100,8 @@ namespace Coffee
 
         for (auto& particle : Particles)
         {
+            particle.LocalRotation = ParticleRotation;
+
             if (VelocityRangeConfig.UseRange)
             {
                 float timeInCurrentInterval = fmod(particle.Age, VelocityChangeInterval);
@@ -196,6 +198,7 @@ namespace Coffee
             if (particle.Age < particle.LifeTime && particle.Billboard)
             {
                 glm::mat4 transform = particle.Billboard->CalculateTransform(cameraPosition, cameraUp);
+                transform = glm::rotate(transform, particle.LocalRotation, glm::vec3(0, 0, 1));
 
                 renderCommands.push_back({
                     transform,        // Transformación del Billboard

@@ -756,8 +756,10 @@ namespace Coffee {
                 ImGui::Separator();
                 ImGui::Text("Modifiers");
                 ImGui::DragFloat3("Gravity", glm::value_ptr(particleSystem.Gravity), 0.1f);
-                ImGui::Checkbox("Apply Rotation", &particleSystem.ApplyRotation);
-                ImGui::DragFloat("Rotation Speed", &particleSystem.RotationSpeed, 0.1f);
+          /*      ImGui::Checkbox("Apply Rotation", &particleSystem.ApplyRotation);
+                ImGui::DragFloat("Rotation Speed", &particleSystem.RotationSpeed, 0.1f);*/
+                ImGui::Text("Particle Rotation");
+                ImGui::DragFloat("Rotation", &particleSystem.ParticleRotation, 0.1f, -180.0f, 180.0f);
                 ImGui::DragFloat("Particle Size", &particleSystem.ParticleSize, 0.1f, 0.1f); // Ajustar el tamaño
                 ImGui::Text("Velocity Range");
                 ImGui::Checkbox("Use Velocity Range", &particleSystem.VelocityRangeConfig.UseRange);
