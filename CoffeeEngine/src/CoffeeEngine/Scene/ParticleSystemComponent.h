@@ -85,7 +85,7 @@ namespace Coffee
 
         std::vector<Particle> Particles;
 
-        BillboardType ParticleBillboardType = BillboardType::SCREEN_ALIGNED;
+        BillboardType ParticleBillboardType = BillboardType::WORLD_ALIGNED;
 
       private:
         void EmitParticle();

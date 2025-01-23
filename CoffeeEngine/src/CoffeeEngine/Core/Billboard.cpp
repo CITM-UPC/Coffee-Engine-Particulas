@@ -26,7 +26,7 @@ namespace Coffee
 
     glm::mat4 Billboard::CalculateScreenAligned(const glm::vec3& cameraPosition, const glm::vec3& cameraUp)
     {
-        glm::vec3 N = glm::normalize(cameraPosition - m_Position);
+        glm::vec3 N = -glm::normalize(glm::vec3(cameraPosition.x, 0, cameraPosition.z));
         glm::vec3 U = cameraUp;
         glm::vec3 R = glm::cross(U, N);
 
