@@ -1,4 +1,4 @@
-#include "Scene.h"
+ï»¿#include "Scene.h"
 
 #include "CoffeeEngine/Core/Base.h"
 #include "CoffeeEngine/Core/DataStructures/Octree.h"
@@ -108,7 +108,36 @@ namespace Coffee {
 
             m_Octree.Insert(objectContainer);
         }
+        auto particleView = m_Registry.view<ParticleSystemComponent>();
+        for (auto entity : particleView)
+        {
+            auto& particleSystem = particleView.get<ParticleSystemComponent>(entity);
+            particleSystem.AliveParticleCount = 0; // Reinicia el conteo si es necesario
+            particleSystem.Update(0.0f);           // InicializaciÃ³n bÃ¡sica
+        }
     }
+
+    void Scene::UpdateParticles(float dt, const glm::mat4& viewProjection, const glm::vec3& cameraPosition,
+                                const glm::vec3& cameraUp)
+    {
+        auto particleView = m_Registry.view<ParticleSystemComponent, TransformComponent>();
+        for (auto entity : particleView)
+        {
+            auto& particleSystem = particleView.get<ParticleSystemComponent>(entity);
+            auto& transformComponent = particleView.get<TransformComponent>(entity);
+
+            // Actualizar posiciÃ³n del emisor
+            particleSystem.GlobalEmitterPosition = glm::vec3(transformComponent.GetWorldTransform() *
+                                                             glm::vec4(particleSystem.LocalEmitterPosition, 1.0f));
+
+            // Actualizar el sistema de partÃ­culas
+            particleSystem.Update(dt);
+
+            // Renderizar las partÃ­culas con la informaciÃ³n de la cÃ¡mara
+            particleSystem.Render(cameraPosition, cameraUp);
+        }
+    }
+
 
     void Scene::OnUpdateEditor(EditorCamera& camera, float dt)
     {
@@ -117,6 +146,7 @@ namespace Coffee {
         m_SceneTree->Update();
 
         Renderer::BeginScene(camera);
+        BillboardRenderer::BeginScene(camera.GetViewProjection(), camera.GetPosition(),camera.GetUpDirection());
 
         // TEST ------------------------------
         m_Octree.DebugDraw();
@@ -153,28 +183,9 @@ namespace Coffee {
             Renderer::Submit(lightComponent);
         }
 
-        // Procesar sistemas de partículas
-        auto particleView = m_Registry.view<ParticleSystemComponent, TransformComponent>();
-        for (auto entity : particleView)
-        {
-            auto& particleSystem = particleView.get<ParticleSystemComponent>(entity);
-            auto& transformComponent = particleView.get<TransformComponent>(entity);
+         // Renderizar partÃ­culas
+        UpdateParticles(dt, camera.GetViewProjection(), camera.GetPosition(), camera.GetUpDirection());
 
-            // Actualizar posición del emisor
-            particleSystem.GlobalEmitterPosition = glm::vec3(transformComponent.GetWorldTransform() *
-                                                             glm::vec4(particleSystem.LocalEmitterPosition, 1.0f));
-
-            // Actualizar el sistema de partículas
-            particleSystem.Update(dt);
-
-            // Obtener la información de la cámara del editor
-            glm::mat4 viewProjection = camera.GetViewProjection();
-            glm::vec3 cameraPosition = camera.GetPosition();
-            glm::vec3 cameraUp = camera.GetUpDirection();
-
-            // Renderizar las partículas con la información de la cámara
-            particleSystem.Render(cameraPosition, cameraUp);
-        }
         BillboardRenderer::EndScene();
         Renderer::EndScene();
     }
@@ -186,27 +197,27 @@ namespace Coffee {
 
         m_SceneTree->Update();
 
-        //// Procesar sistemas de partículas
+        //// Procesar sistemas de partï¿½culas
         //auto particleView = m_Registry.view<ParticleSystemComponent>();
         //for (auto entity : particleView)
         //{
         //    auto& particleSystem = particleView.get<ParticleSystemComponent>(entity);
-        //    particleSystem.Update(dt); // Llama al método Update del componente
+        //    particleSystem.Update(dt); // Llama al mï¿½todo Update del componente
         //}
 
         Camera* camera = nullptr;
         glm::mat4 cameraTransform;
         auto cameraView = m_Registry.view<TransformComponent, CameraComponent>();
-        for(auto entity : cameraView)
+        for (auto entity : cameraView)
         {
             auto [transform, cameraComponent] = cameraView.get<TransformComponent, CameraComponent>(entity);
-            
-            //TODO: Multiple cameras support (for now, the last camera found will be used)
+
+            // TODO: Multiple cameras support (for now, the last camera found will be used)
             camera = &cameraComponent.Camera;
             cameraTransform = transform.GetWorldTransform();
         }
 
-        if(!camera)
+        if (!camera)
         {
             COFFEE_ERROR("No camera entity found!");
 
@@ -216,47 +227,33 @@ namespace Coffee {
             cameraTransform = glm::mat4(1.0f);
         }
 
-        //TODO: Add this to a function bc it is repeated in OnUpdateEditor
+        // Calcular las variables necesarias para el renderizado de partÃ­culas
+        glm::mat4 viewProjection = camera->GetProjection() * glm::inverse(cameraTransform);
+        glm::vec3 cameraPosition = glm::vec3(cameraTransform[3]);           // PosiciÃ³n de la cÃ¡mara
+        glm::vec3 cameraUp = glm::normalize(glm::vec3(cameraTransform[1])); // DirecciÃ³n "arriba" de la cÃ¡mara
+
         Renderer::BeginScene(*camera, cameraTransform);
+        
+        BillboardRenderer::BeginScene(viewProjection, cameraPosition, cameraUp);
+
 
         m_Octree.DebugDraw();
 
-        // Get all the static meshes from the Octree
-
+        // Obtener las mallas estÃ¡ticas del Octree
         glm::mat4 testProjection = glm::perspective(glm::radians(90.0f), 16.0f / 9.0f, 0.1f, 100.0f);
-
         Frustum frustum = Frustum(camera->GetProjection() /* testProjection */ * glm::inverse(cameraTransform));
         DebugRenderer::DrawFrustum(frustum, glm::vec4(1.0f), 1.0f);
 
         auto meshes = m_Octree.Query(frustum);
 
-        for(auto& mesh : meshes)
+        for (auto& mesh : meshes)
         {
             Renderer::Submit(RenderCommand{mesh.transform, mesh.object, mesh.object->GetMaterial(), 0});
         }
-        
-/*         // Get all entities with ModelComponent and TransformComponent
-        auto view = m_Registry.view<MeshComponent, TransformComponent>();
 
-        // Loop through each entity with the specified components
-        for (auto& entity : view)
-        {
-            // Get the ModelComponent and TransformComponent for the current entity
-            auto& meshComponent = view.get<MeshComponent>(entity);
-            auto& transformComponent = view.get<TransformComponent>(entity);
-            auto materialComponent = m_Registry.try_get<MaterialComponent>(entity);
-
-            Ref<Mesh> mesh = meshComponent.GetMesh();
-            Ref<Material> material = (materialComponent) ? materialComponent->material : nullptr;
-            
-            Renderer::Submit(RenderCommand{transformComponent.GetWorldTransform(), mesh, material, (uint32_t)entity});
-        } */
-
-        //Get all entities with LightComponent and TransformComponent
+        // Procesar luces
         auto lightView = m_Registry.view<LightComponent, TransformComponent>();
-
-        //Loop through each entity with the specified components
-        for(auto& entity : lightView)
+        for (auto& entity : lightView)
         {
             auto& lightComponent = lightView.get<LightComponent>(entity);
             auto& transformComponent = lightView.get<TransformComponent>(entity);
@@ -267,44 +264,24 @@ namespace Coffee {
             Renderer::Submit(lightComponent);
         }
 
-        // Get all entities with ScriptComponent
+        // Procesar scripts
         auto scriptView = m_Registry.view<ScriptComponent>();
-
         for (auto& entity : scriptView)
         {
             Entity scriptEntity{entity, this};
             ScriptManager::RegisterVariable("entity", (void*)&scriptEntity);
 
             auto& scriptComponent = scriptView.get<ScriptComponent>(entity);
-
             scriptComponent.script.OnUpdate();
         }
 
-        // Renderizar partículas en el editor
-        auto particleView = m_Registry.view<ParticleSystemComponent, TransformComponent>();
-        for (auto entity : particleView)
-        {
-            auto& particleSystem = particleView.get<ParticleSystemComponent>(entity);
-            auto& transformComponent = particleView.get<TransformComponent>(entity);
+        // Renderizar partÃ­culas
+        UpdateParticles(dt, viewProjection, cameraPosition, cameraUp);
 
-            // Actualizar posición del emisor
-            particleSystem.GlobalEmitterPosition = glm::vec3(transformComponent.GetWorldTransform() *
-                                                             glm::vec4(particleSystem.LocalEmitterPosition, 1.0f));
-
-            // Actualizar el sistema de partículas
-            particleSystem.Update(dt);
-
-            // Obtener la información de la cámara del juego
-            glm::mat4 viewProjection = camera->GetProjection() * glm::inverse(cameraTransform);
-            glm::vec3 cameraPosition = glm::vec3(cameraTransform[3]);
-            glm::vec3 cameraUp = glm::normalize(glm::vec3(cameraTransform[1]));
-
-            // Renderizar las partículas con la información de la cámara
-            particleSystem.Render(cameraPosition, cameraUp);
-        }
         BillboardRenderer::EndScene();
         Renderer::EndScene();
     }
+
 
     void Scene::OnEvent(Event& e)
     {
@@ -338,7 +315,9 @@ namespace Coffee {
             .get<CameraComponent>(archive)
             .get<MeshComponent>(archive)
             .get<MaterialComponent>(archive)
-            .get<LightComponent>(archive);
+            .get<LightComponent>(archive)
+            .get<ParticleSystemComponent>(archive);
+
         
         scene->m_FilePath = path;
 
@@ -372,7 +351,8 @@ namespace Coffee {
             .get<CameraComponent>(archive)
             .get<MeshComponent>(archive)
             .get<MaterialComponent>(archive)
-            .get<LightComponent>(archive);
+            .get<LightComponent>(archive)
+            .get<ParticleSystemComponent>(archive);
         
         scene->m_FilePath = path;
 

@@ -71,6 +71,9 @@ namespace Coffee {
          */
         void OnUpdateRuntime(float dt);
 
+        void UpdateParticles(float dt, const glm::mat4& viewProjection, const glm::vec3& cameraPosition,
+                             const glm::vec3& cameraUp);
+
         /**
          * @brief Handle an event in the scene.
          * @param e The event.

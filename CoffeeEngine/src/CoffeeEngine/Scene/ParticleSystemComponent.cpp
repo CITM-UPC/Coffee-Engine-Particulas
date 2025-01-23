@@ -161,7 +161,14 @@ namespace Coffee
                 particle.Position += particle.Velocity * deltaTime;
                 particle.Age += deltaTime;
 
-                particle.Billboard->SetPosition(particle.Position);
+                if (particle.Billboard) // Validar que el Billboard es válido
+                {
+                    particle.Billboard->SetPosition(particle.Position);
+                }
+                else
+                {
+                    COFFEE_CORE_ERROR("Particle has no valid Billboard assigned.");
+                }
 
                 AliveParticleCount++;
             }
@@ -171,38 +178,44 @@ namespace Coffee
             std::remove_if(Particles.begin(), Particles.end(), [](const Particle& p) { return p.Age >= p.LifeTime; }),
             Particles.end());
 
-        COFFEE_CORE_INFO("Alive particles: {}", AliveParticleCount);
+        //COFFEE_CORE_INFO("Alive particles: {}", AliveParticleCount);
     }
 
     void ParticleSystemComponent::Render(const glm::vec3& cameraPosition, const glm::vec3& cameraUp)
     {
         std::vector<RenderCommand> renderCommands;
 
-        if (ParticleTexture)
+        if (ParticleTexture) // Asignar la textura si existe
         {
             ParticleMaterial->GetMaterialTextures().albedo = ParticleTexture;
         }
 
         for (const auto& particle : Particles)
         {
-            if (particle.Age < particle.LifeTime)
+            // Asegurarse de que la partícula sigue viva y tiene un Billboard válido
+            if (particle.Age < particle.LifeTime && particle.Billboard)
             {
                 glm::mat4 transform = particle.Billboard->CalculateTransform(cameraPosition, cameraUp);
-                
-                renderCommands.push_back({
-                    transform, ParticleMesh, ParticleMaterial,
-                    0 // Entity ID
-                });
 
+                renderCommands.push_back({
+                    transform,        // Transformación del Billboard
+                    ParticleMesh,     // Malla de la partícula
+                    ParticleMaterial, // Material de la partícula
+                    0                 // Entity ID (opcional)
+                });
+            }
+            else if (!particle.Billboard)
+            {
+                COFFEE_CORE_ERROR("Particle has no valid Billboard during render.");
             }
         }
 
+        // Enviar comandos al renderer
         for (const auto& command : renderCommands)
         {
             Renderer::Submit(command);
         }
     }
-
 
     void ParticleSystemComponent::EmitParticle()
     {
@@ -240,17 +253,26 @@ namespace Coffee
             particle.InitialSize = particle.Size;
             particle.TargetSize = particle.Size;
         }
+
         if (EmissionAreaConfig.UseEmissionArea)
         {
             particle.Position = GenerateRandomPositionInArea();
         }
 
+        // Crear y asignar el Billboard
         particle.Billboard = Billboard::Create(ParticleBillboardType);
+        if (!particle.Billboard)
+        {
+            COFFEE_CORE_ERROR("Failed to create Billboard for particle");
+            return;
+        }
+
         particle.Billboard->SetPosition(particle.Position);
         particle.Billboard->SetScale(glm::vec3(particle.Size));
         particle.Billboard->SetMaterial(ParticleMaterial);
 
         Particles.push_back(particle);
-        COFFEE_CORE_INFO("Emitted particle");
+        //COFFEE_CORE_INFO("Emitted particle");
     }
+
 } // namespace Coffee
