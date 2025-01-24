@@ -185,7 +185,17 @@ namespace Coffee
 
     void ParticleSystemComponent::Render(const glm::vec3& cameraPosition, const glm::vec3& cameraUp)
     {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
         std::vector<RenderCommand> renderCommands;
+
+        std::sort(renderCommands.begin(), renderCommands.end(), [&](const RenderCommand& a, const RenderCommand& b) {
+            float distA = glm::length(a.transform[3] - glm::vec4(cameraPosition, 1.0f));
+            float distB = glm::length(b.transform[3] - glm::vec4(cameraPosition, 1.0f));
+            return distA > distB; // Dibuja primero las más lejanas
+        });
 
         if (ParticleTexture) // Asignar la textura si existe
         {
@@ -218,6 +228,8 @@ namespace Coffee
         {
             Renderer::Submit(command);
         }
+
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f); 
     }
 
     void ParticleSystemComponent::EmitParticle()

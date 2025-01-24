@@ -805,7 +805,7 @@ namespace Coffee {
                         std::string path = FileDialog::OpenFile({}).string();
                         if (!path.empty())
                         {
-                            Ref<Texture2D> t = Texture2D::Load(path);
+                            Ref<Texture2D> t = Texture2D::Load(path, true);
                             texture = t;
                             particleSystem.SetParticleTexture(
                                 texture); 
