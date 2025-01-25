@@ -84,6 +84,10 @@ namespace Coffee
             float TargetSize;
             float LocalRotation = 0.0f;
             bool EnableRotation = false;
+            int CurrentFrame = 0;
+            int TotalFrames = 1;
+            float FrameTime = 0.0f;
+            float FrameInterval = 0.1f; // Time between frames
             Ref<Billboard> Billboard;
             Ref<Texture2D> Texture;
 
@@ -145,7 +149,11 @@ namespace Coffee
 
         BillboardType ParticleBillboardType = BillboardType::WORLD_ALIGNED;
 
+        
+        void SetSpritesheet(const Ref<Texture2D>& spritesheet, int columns, int rows);
+        void UpdateParticleFrame(Particle& particle, float deltaTime);
         // Serialización principal
+
         template <class Archive> void serialize(Archive& archive)
         {
             archive(

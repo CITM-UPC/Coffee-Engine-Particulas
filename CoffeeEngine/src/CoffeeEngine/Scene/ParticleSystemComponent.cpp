@@ -101,7 +101,7 @@ namespace Coffee
         for (auto& particle : Particles)
         {
             particle.LocalRotation = ParticleRotation;
-
+            UpdateParticleFrame(particle, deltaTime);
             if (VelocityRangeConfig.UseRange)
             {
                 float timeInCurrentInterval = fmod(particle.Age, VelocityChangeInterval);
@@ -191,6 +191,8 @@ namespace Coffee
 
         std::vector<RenderCommand> renderCommands;
 
+        
+
         std::sort(renderCommands.begin(), renderCommands.end(), [&](const RenderCommand& a, const RenderCommand& b) {
             float distA = glm::length(a.transform[3] - glm::vec4(cameraPosition, 1.0f));
             float distB = glm::length(b.transform[3] - glm::vec4(cameraPosition, 1.0f));
@@ -202,14 +204,14 @@ namespace Coffee
             ParticleMaterial->GetMaterialTextures().albedo = ParticleTexture;
         }
 
-        for (const auto& particle : Particles)
+    for (const auto& particle : Particles)
         {
             // Asegurarse de que la partícula sigue viva y tiene un Billboard válido
             if (particle.Age < particle.LifeTime && particle.Billboard)
             {
                 glm::mat4 transform = particle.Billboard->CalculateTransform(cameraPosition, cameraUp);
                 transform = glm::rotate(transform, particle.LocalRotation, glm::vec3(0, 0, 1));
-
+                particle.Billboard->SetScale(glm::vec3(particle.Size));
                 renderCommands.push_back({
                     transform,        // Transformación del Billboard
                     ParticleMesh,     // Malla de la partícula
@@ -232,6 +234,31 @@ namespace Coffee
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f); 
     }
 
+    void ParticleSystemComponent::SetSpritesheet(const Ref<Texture2D>& spritesheet, int columns, int rows)
+    {
+        ParticleTexture = spritesheet;
+        if (ParticleMaterial)
+        {
+            ParticleMaterial->GetMaterialTextures().albedo = spritesheet;
+        }
+
+        // Configure particle frames
+        for (auto& particle : Particles)
+        {
+            particle.TotalFrames = columns * rows;
+        }
+    }
+
+    void ParticleSystemComponent::UpdateParticleFrame(Particle& particle, float deltaTime)
+    {
+        particle.FrameTime += deltaTime;
+
+        if (particle.FrameTime >= particle.FrameInterval)
+        {
+            particle.CurrentFrame = (particle.CurrentFrame + 1) % particle.TotalFrames;
+            particle.FrameTime = 0.0f;
+        }
+    }
     void ParticleSystemComponent::EmitParticle()
     {
         Particle particle;
