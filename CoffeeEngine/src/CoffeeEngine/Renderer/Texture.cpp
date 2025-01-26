@@ -105,8 +105,8 @@ namespace Coffee {
     {
         ZoneScoped;
 
-        m_FilePath = path;
-        m_Name = path.filename().string();
+        m_FilePath = std::filesystem::relative(path, std::filesystem::current_path());
+        m_Name = m_FilePath.filename().string();
 
         m_Properties.srgb = srgb;
 
@@ -124,18 +124,14 @@ namespace Coffee {
             switch (nrComponents)
             {
                 case 1:
-                    m_Properties.Format = ImageFormat::R8;
-                break;
+                    m_Properties.Format = ImageFormat::R8; break;
                 case 3:
-                    m_Properties.Format = m_Properties.srgb ? ImageFormat::SRGB8 : ImageFormat::RGB8;
-                break;
+                    m_Properties.Format = m_Properties.srgb ? ImageFormat::SRGB8 : ImageFormat::RGB8; break;
                 case 4:
-                    m_Properties.Format = m_Properties.srgb ? ImageFormat::SRGBA8 : ImageFormat::RGBA8;
-                break;
+                    m_Properties.Format = m_Properties.srgb ? ImageFormat::SRGBA8 : ImageFormat::RGBA8; break;
             }
 
             int mipLevels = 1 + floor(log2(std::max(m_Width, m_Height)));
-
             GLenum internalFormat = ImageFormatToOpenGLInternalFormat(m_Properties.Format);
             GLenum format = ImageFormatToOpenGLFormat(m_Properties.Format);
 
@@ -232,7 +228,16 @@ namespace Coffee {
 
     Ref<Texture2D> Texture2D::Load(const std::filesystem::path& path, bool srgb)
     {
-        return ResourceLoader::LoadTexture2D(path, srgb);
+        // Convertir path relativo a absoluto
+        std::filesystem::path absolutePath = std::filesystem::current_path() / path;
+
+        if (!std::filesystem::exists(absolutePath))
+        {
+            COFFEE_CORE_ERROR("Texture path does not exist: {0}", absolutePath.string());
+            return nullptr;
+        }
+
+        return ResourceLoader::LoadTexture2D(absolutePath, srgb);
     }
 
     Ref<Texture2D> Texture2D::Create(uint32_t width, uint32_t height, ImageFormat format)

@@ -91,6 +91,8 @@ namespace Coffee {
         uint32_t GetID() override { return m_textureID; };
         ImageFormat GetImageFormat() override { return m_Properties.Format; };
 
+        const std::filesystem::path& GetFilePath() const { return m_FilePath; }
+
         void Clear(glm::vec4 color);
         void SetData(void* data, uint32_t size);
 
