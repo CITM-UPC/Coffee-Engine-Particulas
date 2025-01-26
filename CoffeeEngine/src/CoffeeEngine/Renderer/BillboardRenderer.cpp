@@ -104,9 +104,9 @@ namespace Coffee
         texture->Bind(0);
         s_Data.BillboardShader->setInt("u_Texture", 0);
 
+        billboard->GetMaterial()->Use();
         s_Data.QuadVertexArray->Bind();
         glDrawElements(GL_TRIANGLES, s_Data.QuadVertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
-        s_Data.QuadVertexArray->Unbind();
     }
 
     void BillboardRenderer::Submit(const BillboardRenderCommand& command)

@@ -216,15 +216,13 @@ namespace Coffee
         //COFFEE_CORE_INFO("Alive particles: {}", AliveParticleCount);
     }
 
-    void ParticleSystemComponent::Render(const glm::vec3& cameraPosition, const glm::vec3& cameraUp)
+void ParticleSystemComponent::Render(const glm::vec3& cameraPosition, const glm::vec3& cameraUp)
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         std::vector<RenderCommand> renderCommands;
-
-        
 
         std::sort(renderCommands.begin(), renderCommands.end(), [&](const RenderCommand& a, const RenderCommand& b) {
             float distA = glm::length(a.transform[3] - glm::vec4(cameraPosition, 1.0f));
@@ -237,13 +235,13 @@ namespace Coffee
             ParticleMaterial->GetMaterialTextures().albedo = ParticleTexture;
         }
 
-    for (const auto& particle : Particles)
+        for (const auto& particle : Particles)
         {
             if (particle.Age < particle.LifeTime && particle.Billboard)
             {
                 glm::mat4 transform = particle.Billboard->CalculateTransform(cameraPosition, cameraUp);
                 transform = glm::rotate(transform, particle.LocalRotation, glm::vec3(0, 0, 1));
-                particle.Billboard->SetScale(glm::vec3(particle.Size));               
+                particle.Billboard->SetScale(glm::vec3(particle.Size));
                 particle.Billboard->SetColor(particle.Color);
                 renderCommands.push_back({
                     transform,        // Transformación del Billboard
@@ -264,8 +262,9 @@ namespace Coffee
             Renderer::Submit(command);
         }
 
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f); 
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     }
+
 
     void ParticleSystemComponent::SetSpritesheet(const Ref<Texture2D>& spritesheet, int columns, int rows)
     {
@@ -372,10 +371,12 @@ namespace Coffee
         particle.Billboard->SetPosition(particle.Position);
         particle.Billboard->SetScale(glm::vec3(particle.Size));
         particle.Billboard->SetMaterial(ParticleMaterial);
+        particle.Billboard->SetColor(particle.Color); // Asegúrate de que el color se esté configurando aquí
 
         Particles.push_back(particle);
-        //COFFEE_CORE_INFO("Emitted particle");
+        // COFFEE_CORE_INFO("Emitted particle");
     }
+
     void ParticleSystemComponent::SetParticleColorGradient(const glm::vec4& startColor, const glm::vec4& endColor,  bool repeatGradient = false)
     {
         for (auto& particle : Particles)
