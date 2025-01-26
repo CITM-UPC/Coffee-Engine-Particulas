@@ -565,6 +565,7 @@ namespace Coffee {
         {
             auto& scriptComponent = entity.GetComponent<ScriptComponent>();
             bool isCollapsingHeaderOpen = true;
+
             if (ImGui::CollapsingHeader("Script", &isCollapsingHeaderOpen, ImGuiTreeNodeFlags_DefaultOpen))
             {
                 /*
@@ -745,7 +746,7 @@ namespace Coffee {
         {
             auto DrawParticleTextureWidget = [&](const std::string& label, Ref<Texture2D>& texture) {
                 auto& particleSystem = entity.GetComponent<ParticleSystemComponent>();
-
+                
                 uint32_t textureID = texture ? texture->GetID() : 0;
                 ImGui::ImageButton(label.c_str(), (ImTextureID)textureID, {64, 64});
 
@@ -838,6 +839,12 @@ namespace Coffee {
                 ImGui::Checkbox("Use Size Range", &particleSystem.SizeRangeConfig.UseRange);
                 ImGui::Text("Emission Area");
                 ImGui::Checkbox("Use Emission Area", &particleSystem.EmissionAreaConfig.UseEmissionArea);
+                static bool useColorInterpolation = false;
+                ImGui::Text("Interpolation");
+                ImGui::Checkbox("Use Color Interpolation", &useColorInterpolation);
+                static bool useAlphaFade = false;
+                ImGui::Text("Alpha Fade");
+                ImGui::Checkbox("Use Alpha Fade", &useAlphaFade);
                 ImGui::Separator();
                 ImGui::Text("Live Particle Count: %zu", particleSystem.AliveParticleCount); // Mostrar el contador
 
@@ -946,6 +953,32 @@ namespace Coffee {
                         ImGui::DragFloat2("Radius (X,Z)", glm::value_ptr(particleSystem.EmissionAreaConfig.Size), 0.1f,
                                           0.0f, 100.0f);
                         break;
+                    }
+                }
+                if (useColorInterpolation)
+                {
+                    static glm::vec4 startColor(1.0f, 1.0f, 1.0f, 1.0f);
+                    static glm::vec4 endColor(1.0f, 1.0f, 1.0f, 0.0f);
+
+                    ImGui::ColorEdit4("Start Color", glm::value_ptr(startColor));
+                    ImGui::ColorEdit4("End Color", glm::value_ptr(endColor));
+
+                    if (ImGui::Button("Apply Color Transition"))
+                    {
+                        particleSystem.SetParticleColorTransition(startColor, endColor);
+                    }
+                }
+                if (useAlphaFade)
+                {
+                    static float startAlpha = 1.0f;
+                    static float endAlpha = 0.0f;
+
+                    ImGui::SliderFloat("Start Alpha", &startAlpha, 0.0f, 1.0f);
+                    ImGui::SliderFloat("End Alpha", &endAlpha, 0.0f, 1.0f);
+
+                    if (ImGui::Button("Apply Alpha Fade"))
+                    {
+                        particleSystem.SetParticleAlphaFade(startAlpha, endAlpha);
                     }
                 }
                 if (particleSystem.GetParticleMaterial())

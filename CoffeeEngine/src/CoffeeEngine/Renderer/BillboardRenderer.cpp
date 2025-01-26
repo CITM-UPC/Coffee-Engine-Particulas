@@ -60,6 +60,7 @@ namespace Coffee
         for (const auto& command : s_Data.billboardQueue)
         {
             Material* material = command.material.get();
+            material->GetShader()->setVec4("u_Color", command.billboard->GetColor());
             if (material == nullptr)
             {
                 // There should be access to the default material here

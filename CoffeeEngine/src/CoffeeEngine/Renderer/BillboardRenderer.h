@@ -16,7 +16,11 @@ namespace Coffee
         Ref<Material> material;
         uint32_t entityID;
     };
-
+    static void DrawBillboard(
+    const Ref<Billboard>& billboard, 
+    const Ref<Texture2D>& texture, 
+    const glm::vec4& color = glm::vec4(1.0f)
+);
     class BillboardRenderer
     {
       public:

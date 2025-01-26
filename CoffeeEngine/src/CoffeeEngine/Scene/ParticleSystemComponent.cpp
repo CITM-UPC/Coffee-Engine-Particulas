@@ -174,6 +174,21 @@ namespace Coffee
 
                 AliveParticleCount++;
             }
+            // Color interpolation
+            if (particle.UseColorInterpolation)
+            {
+                float t = particle.Age / particle.LifeTime;
+                t = glm::smoothstep(0.0f, 1.0f, t);
+                particle.Color = glm::mix(particle.InitialColor, particle.TargetColor, t);
+            }
+
+            // Alpha fading
+            if (particle.UseAlphaFade)
+            {
+                float t = particle.Age / particle.LifeTime;
+                t = glm::smoothstep(0.0f, 1.0f, t);
+                particle.Color.a = glm::mix(particle.InitialColor.a, particle.TargetColor.a, t);
+            }
         }
 
         Particles.erase(
@@ -211,7 +226,8 @@ namespace Coffee
             {
                 glm::mat4 transform = particle.Billboard->CalculateTransform(cameraPosition, cameraUp);
                 transform = glm::rotate(transform, particle.LocalRotation, glm::vec3(0, 0, 1));
-                particle.Billboard->SetScale(glm::vec3(particle.Size));
+                particle.Billboard->SetScale(glm::vec3(particle.Size));               
+                particle.Billboard->SetColor(particle.Color);
                 renderCommands.push_back({
                     transform,        // Transformación del Billboard
                     ParticleMesh,     // Malla de la partícula
@@ -248,7 +264,25 @@ namespace Coffee
             particle.TotalFrames = columns * rows;
         }
     }
-
+    void ParticleSystemComponent::SetParticleColorTransition(const glm::vec4& startColor, const glm::vec4& endColor)
+    {
+        for (auto& particle : Particles)
+        {
+            particle.InitialColor = startColor;
+            particle.TargetColor = endColor;
+            particle.UseColorInterpolation = true;
+        }
+    }
+    void ParticleSystemComponent::SetParticleAlphaFade(float startAlpha, float endAlpha)
+    {
+        for (auto& particle : Particles)
+        {
+            particle.Color.a = startAlpha;
+            particle.InitialColor.a = startAlpha;
+            particle.TargetColor.a = endAlpha;
+            particle.UseAlphaFade = true;
+        }
+    }
     void ParticleSystemComponent::UpdateParticleFrame(Particle& particle, float deltaTime)
     {
         particle.FrameTime += deltaTime;
@@ -269,7 +303,9 @@ namespace Coffee
         particle.Color = glm::vec4(1.0f);
         particle.LifeTime = ParticleLifetime;
         particle.Age = 0.0f;
-
+        particle.Color = glm::vec4(1.0f);
+        particle.InitialColor = particle.Color;
+        particle.TargetColor = particle.Color;
         if (SizeRangeConfig.UseRange)
         {
             if (SizeRangeConfig.StartWithMin)

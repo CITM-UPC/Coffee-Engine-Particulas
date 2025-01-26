@@ -77,6 +77,10 @@ namespace Coffee
             glm::vec3 InitialVelocity;
             glm::vec3 TargetVelocity;
             glm::vec4 Color;
+            glm::vec4 InitialColor = glm::vec4(1.0f);
+            glm::vec4 TargetColor = glm::vec4(1.0f);
+            bool UseColorInterpolation = false;
+            bool UseAlphaFade = false;
             float LifeTime;
             float Age;
             float Size;
@@ -94,12 +98,20 @@ namespace Coffee
             // Función de serialización
             template <class Archive> void serialize(Archive& archive)
             {
-                archive(cereal::make_nvp("Position", Position), cereal::make_nvp("Velocity", Velocity),
+                archive(cereal::make_nvp("Position", Position), 
+                        cereal::make_nvp("Velocity", Velocity),
                         cereal::make_nvp("InitialVelocity", InitialVelocity),
-                        cereal::make_nvp("TargetVelocity", TargetVelocity), cereal::make_nvp("Color", Color),
-                        cereal::make_nvp("LifeTime", LifeTime), cereal::make_nvp("Age", Age),
-                        cereal::make_nvp("Size", Size), cereal::make_nvp("InitialSize", InitialSize),
-                        cereal::make_nvp("TargetSize", TargetSize));
+                        cereal::make_nvp("TargetVelocity", TargetVelocity), 
+                        cereal::make_nvp("Color", Color),
+                        cereal::make_nvp("LifeTime", LifeTime), 
+                        cereal::make_nvp("Age", Age),
+                        cereal::make_nvp("Size", Size), 
+                        cereal::make_nvp("InitialSize", InitialSize),
+                        cereal::make_nvp("TargetSize", TargetSize), 
+                        cereal::make_nvp("InitialColor", InitialColor),
+                        cereal::make_nvp("TargetColor", TargetColor),
+                        cereal::make_nvp("UseColorInterpolation", UseColorInterpolation),
+                        cereal::make_nvp("UseAlphaFade", UseAlphaFade));
             }
         };
 
@@ -153,7 +165,8 @@ namespace Coffee
         void SetSpritesheet(const Ref<Texture2D>& spritesheet, int columns, int rows);
         void UpdateParticleFrame(Particle& particle, float deltaTime);
         // Serialización principal
-
+        void SetParticleColorTransition(const glm::vec4& startColor, const glm::vec4& endColor);
+        void SetParticleAlphaFade(float startAlpha, float endAlpha);
         template <class Archive> void serialize(Archive& archive)
         {
             // Serializar/deserializar propiedades del sistema de partículas
@@ -165,7 +178,8 @@ namespace Coffee
                 cereal::make_nvp("VelocityChangeInterval", VelocityChangeInterval),
                 cereal::make_nvp("SizeRangeConfig", SizeRangeConfig),
                 cereal::make_nvp("SizeChangeInterval", SizeChangeInterval),
-                cereal::make_nvp("EmissionAreaConfig", EmissionAreaConfig), cereal::make_nvp("Particles", Particles));
+                cereal::make_nvp("EmissionAreaConfig", EmissionAreaConfig), 
+                cereal::make_nvp("Particles", Particles));
 
             // Serializar o deserializar la textura de la partícula
             std::string texturePath;

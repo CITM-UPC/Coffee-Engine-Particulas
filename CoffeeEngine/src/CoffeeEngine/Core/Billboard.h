@@ -26,7 +26,9 @@ namespace Coffee
         void SetScale(const glm::vec3& scale) { m_Scale = scale; }
         void SetType(BillboardType type) { m_Type = type; }
         void SetMaterial(const Ref<Material>& material) { m_Material = material; }
+        void SetColor(const glm::vec4& color) { m_Color = color; }
 
+        const glm::vec4& GetColor() const { return m_Color; }
         const glm::vec3& GetPosition() const { return m_Position; }
         const glm::vec3& GetScale() const { return m_Scale; }
         BillboardType GetType() const { return m_Type; }
@@ -43,6 +45,7 @@ namespace Coffee
         glm::vec3 m_Position = {0.0f, 0.0f, 0.0f};
         glm::vec3 m_Scale = {1.0f, 1.0f, 1.0f};
         Ref<Material> m_Material;
+        glm::vec4 m_Color = glm::vec4(1.0f);
     };
 
 } // namespace Coffee
