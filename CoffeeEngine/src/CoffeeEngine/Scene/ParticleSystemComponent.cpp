@@ -152,7 +152,7 @@ namespace Coffee
                 }
                 else
                 {
-                    t = particle.Age / particle.LifeTime; // Usamos toda la vida de la partícula para la interpolación
+                    t = particle.Age / particle.LifeTime;
                 }
                 t = glm::smoothstep(0.0f, 1.0f, t);
                 particle.Size = glm::mix(particle.InitialSize, particle.TargetSize, t);
@@ -163,14 +163,14 @@ namespace Coffee
                 particle.Position += particle.Velocity * deltaTime;
                 particle.Age += deltaTime;
 
-                if (particle.Billboard) // Validar que el Billboard es válido
+                if (particle.Billboard)
                 {
                     particle.Billboard->SetPosition(particle.Position);
                 }
-                else
-                {
-                    COFFEE_CORE_ERROR("Particle has no valid Billboard assigned.");
-                }
+                //else
+                //{
+                //    COFFEE_CORE_ERROR("Particle has no valid Billboard assigned.");
+                //}
 
                 AliveParticleCount++;
             }
@@ -211,17 +211,16 @@ namespace Coffee
         std::sort(renderCommands.begin(), renderCommands.end(), [&](const RenderCommand& a, const RenderCommand& b) {
             float distA = glm::length(a.transform[3] - glm::vec4(cameraPosition, 1.0f));
             float distB = glm::length(b.transform[3] - glm::vec4(cameraPosition, 1.0f));
-            return distA > distB; // Dibuja primero las más lejanas
+            return distA > distB;
         });
 
-        if (ParticleTexture) // Asignar la textura si existe
+        if (ParticleTexture)
         {
             ParticleMaterial->GetMaterialTextures().albedo = ParticleTexture;
         }
 
     for (const auto& particle : Particles)
         {
-            // Asegurarse de que la partícula sigue viva y tiene un Billboard válido
             if (particle.Age < particle.LifeTime && particle.Billboard)
             {
                 glm::mat4 transform = particle.Billboard->CalculateTransform(cameraPosition, cameraUp);

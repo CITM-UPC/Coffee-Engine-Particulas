@@ -169,7 +169,6 @@ namespace Coffee
         void SetParticleAlphaFade(float startAlpha, float endAlpha);
         template <class Archive> void serialize(Archive& archive)
         {
-            // Serializar/deserializar propiedades del sistema de partículas
             archive(
                 cereal::make_nvp("EmitterPosition", LocalEmitterPosition),
                 cereal::make_nvp("EmissionRate", EmissionRate), cereal::make_nvp("ParticleLifetime", ParticleLifetime),
@@ -181,23 +180,22 @@ namespace Coffee
                 cereal::make_nvp("EmissionAreaConfig", EmissionAreaConfig), 
                 cereal::make_nvp("Particles", Particles));
 
-            // Serializar o deserializar la textura de la partícula
             std::string texturePath;
-            if (Archive::is_saving::value) // Si estamos guardando la escena
+            if (Archive::is_saving::value)
             {
                 texturePath = ParticleTexture ? ParticleTexture->GetFilePath().string() : "";
             }
 
             archive(cereal::make_nvp("ParticleTexture", texturePath));
 
-            if (Archive::is_loading::value) // Si estamos cargando la escena
+            if (Archive::is_loading::value)
             {
                 if (!texturePath.empty())
                 {
-                    ParticleTexture = Texture2D::Load(texturePath); // Cargar textura desde el path
+                    ParticleTexture = Texture2D::Load(texturePath);
                     if (ParticleMaterial)
                     {
-                        ParticleMaterial->GetMaterialTextures().albedo = ParticleTexture; // Asignar al material
+                        ParticleMaterial->GetMaterialTextures().albedo = ParticleTexture;
                     }
                 }
             }
