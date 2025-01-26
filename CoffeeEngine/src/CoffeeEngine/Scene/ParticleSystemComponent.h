@@ -92,6 +92,12 @@ namespace Coffee
             int TotalFrames = 1;
             float FrameTime = 0.0f;
             float FrameInterval = 0.1f; // Time between frames
+            glm::vec4 ColorConfig = {1.0f, 1.0f, 1.0f, 1.0f};
+            bool EnableDynamicColorControl = false;
+            bool RepeatColorGradient = false;
+            bool RepeatAlphaFade = false;
+            float InitialAlpha = 1.0f;
+            float EndAlpha = 0.0f;
             Ref<Billboard> Billboard;
             Ref<Texture2D> Texture;
 
@@ -161,7 +167,8 @@ namespace Coffee
 
         BillboardType ParticleBillboardType = BillboardType::WORLD_ALIGNED;
 
-        
+        void SetParticleColorGradient(const glm::vec4& startColor, const glm::vec4& endColor, bool repeatGradient);
+        void SetParticleAlphaFade(float startAlpha, float endAlpha, bool repeatFade);
         void SetSpritesheet(const Ref<Texture2D>& spritesheet, int columns, int rows);
         void UpdateParticleFrame(Particle& particle, float deltaTime);
         // Serialización principal

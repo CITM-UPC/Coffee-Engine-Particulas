@@ -959,26 +959,35 @@ namespace Coffee {
                 {
                     static glm::vec4 startColor(1.0f, 1.0f, 1.0f, 1.0f);
                     static glm::vec4 endColor(1.0f, 1.0f, 1.0f, 0.0f);
+                    static bool interpolationMode = false;
 
                     ImGui::ColorEdit4("Start Color", glm::value_ptr(startColor));
                     ImGui::ColorEdit4("End Color", glm::value_ptr(endColor));
 
+                    ImGui::Checkbox("Repeat Color Transition", &interpolationMode);
+
                     if (ImGui::Button("Apply Color Transition"))
                     {
-                        particleSystem.SetParticleColorTransition(startColor, endColor);
+                        // Add an option to repeat the color transition
+                        particleSystem.SetParticleColorGradient(startColor, endColor, interpolationMode);
                     }
                 }
+
                 if (useAlphaFade)
                 {
                     static float startAlpha = 1.0f;
                     static float endAlpha = 0.0f;
+                    static bool repeatAlphaFade = false;
 
                     ImGui::SliderFloat("Start Alpha", &startAlpha, 0.0f, 1.0f);
                     ImGui::SliderFloat("End Alpha", &endAlpha, 0.0f, 1.0f);
 
+                    ImGui::Checkbox("Repeat Alpha Fade", &repeatAlphaFade);
+
                     if (ImGui::Button("Apply Alpha Fade"))
                     {
-                        particleSystem.SetParticleAlphaFade(startAlpha, endAlpha);
+                        // Modify to support repeating alpha fade
+                        particleSystem.SetParticleAlphaFade(startAlpha, endAlpha, repeatAlphaFade);
                     }
                 }
                 if (particleSystem.GetParticleMaterial())

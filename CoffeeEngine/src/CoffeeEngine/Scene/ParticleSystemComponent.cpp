@@ -182,10 +182,28 @@ namespace Coffee
                 particle.Color = glm::mix(particle.InitialColor, particle.TargetColor, t);
             }
 
-            // Alpha fading
+            if (particle.UseColorInterpolation)
+            {
+                float t = particle.Age / particle.LifeTime;
+
+                if (particle.RepeatColorGradient)
+                {
+                    t = fmod(t, 1.0f);
+                }
+
+                t = glm::smoothstep(0.0f, 1.0f, t);
+                particle.Color = glm::mix(particle.InitialColor, particle.TargetColor, t);
+            }
+
             if (particle.UseAlphaFade)
             {
                 float t = particle.Age / particle.LifeTime;
+
+                if (particle.RepeatAlphaFade)
+                {
+                    t = fmod(t, 1.0f);
+                }
+
                 t = glm::smoothstep(0.0f, 1.0f, t);
                 particle.Color.a = glm::mix(particle.InitialColor.a, particle.TargetColor.a, t);
             }
@@ -299,12 +317,19 @@ namespace Coffee
         particle.Velocity = VelocityRangeConfig.UseRange ? GenerateRandomVelocity() : glm::vec3(0.0f);
         particle.InitialVelocity = particle.Velocity;
         particle.TargetVelocity = particle.Velocity;
-        particle.Color = glm::vec4(1.0f);
+        particle.Color = particle.ColorConfig;
         particle.LifeTime = ParticleLifetime;
         particle.Age = 0.0f;
-        particle.Color = glm::vec4(1.0f);
-        particle.InitialColor = particle.Color;
-        particle.TargetColor = particle.Color;
+        particle.UseColorInterpolation = particle.UseColorInterpolation;
+        particle.RepeatColorGradient = particle.RepeatColorGradient;
+        particle.InitialColor = particle.InitialColor;
+        particle.TargetColor = particle.TargetColor;
+
+        particle.UseAlphaFade = particle.UseAlphaFade;
+        particle.RepeatAlphaFade = particle.RepeatAlphaFade;
+        particle.Color.a = particle.InitialAlpha;
+        particle.InitialColor.a = particle.InitialAlpha;
+        particle.TargetColor.a = particle.EndAlpha;
         if (SizeRangeConfig.UseRange)
         {
             if (SizeRangeConfig.StartWithMin)
@@ -351,5 +376,26 @@ namespace Coffee
         Particles.push_back(particle);
         //COFFEE_CORE_INFO("Emitted particle");
     }
+    void ParticleSystemComponent::SetParticleColorGradient(const glm::vec4& startColor, const glm::vec4& endColor,  bool repeatGradient = false)
+    {
+        for (auto& particle : Particles)
+        {
+            particle.InitialColor = startColor;
+            particle.TargetColor = endColor;
+            particle.UseColorInterpolation = true;
+            particle.RepeatColorGradient = repeatGradient;
+        }
+    }
 
+    void ParticleSystemComponent::SetParticleAlphaFade(float startAlpha, float endAlpha, bool repeatFade = false)
+    {
+        for (auto& particle : Particles)
+        {
+            particle.Color.a = startAlpha;
+            particle.InitialColor.a = startAlpha;
+            particle.TargetColor.a = endAlpha;
+            particle.UseAlphaFade = true;
+            particle.RepeatAlphaFade = repeatFade;
+        }
+    }
 } // namespace Coffee
